@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FF6B35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PointFit">
+<title>PointFit</title>
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;PointFit&quot;,&quot;short_name&quot;:&quot;PointFit&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23fff7f0&quot;,&quot;theme_color&quot;:&quot;%23FF6B35&quot;}">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF6B35;
+    --coral: #FF8C61;
+    --yellow: #FFD166;
+    --green: #06D6A0;
+    --blue: #118AB2;
+    --purple: #9B5DE5;
+    --pink: #F15BB5;
+    --bg: #fff7f0;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --text2: #6b7280;
+    --border: #ffe8d6;
+    --shadow: 0 4px 24px rgba(255,107,53,0.10);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'Nunito', sans-serif; color: var(--text); overflow: hidden; }
+
+  /* ── SPLASH ── */
+  #splash {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #FF6B35, #FF8C61, #FFD166);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999;
+    transition: opacity .5s; gap: 12px;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+  .splash-logo { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; color: white; letter-spacing: -1px; }
+  .splash-sub { color: rgba(255,255,255,0.85); font-size: 1rem; font-weight: 600; }
+  .splash-spin { width: 36px; height: 36px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── AUTH ── */
+  #auth-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99; padding: 24px; gap: 20px;
+  }
+  #auth-screen.hidden { display: none; }
+  .auth-logo { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--orange); }
+  .auth-card { background: white; border-radius: var(--radius); padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; }
+  .auth-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--text); }
+  .auth-input { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-family: 'Nunito', sans-serif; font-size: 1rem; width: 100%; outline: none; transition: border-color .2s; }
+  .auth-input:focus { border-color: var(--orange); }
+  .btn-primary { background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform .1s, box-shadow .2s; box-shadow: 0 4px 16px rgba(255,107,53,0.35); }
+  .btn-primary:active { transform: scale(0.98); }
+  .auth-switch { text-align: center; font-size: 0.9rem; color: var(--text2); cursor: pointer; }
+  .auth-switch span { color: var(--orange); font-weight: 700; }
+  .auth-error { background: #ffe4e1; color: #c0392b; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; font-weight: 600; display: none; }
+  .auth-error.show { display: block; }
+  .auth-divider { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 0.8rem; font-weight: 600; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .btn-demo { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); color: var(--blue); border: 2px solid #bae6fd; border-radius: var(--radius-sm); padding: 13px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+  .btn-demo:active { background: #bae6fd; }
+  .demo-banner { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #fcd34d; border-radius: 10px; padding: 8px 14px; font-size: 0.78rem; font-weight: 700; color: #92400e; text-align: center; display: none; }
+  .demo-banner.show { display: block; }
+  #demo-banner-app { display: none; margin: 0; border-radius: 0; border-left: none; border-right: none; border-top: none; flex-shrink: 0; }
+
+  /* ── MAIN APP ── */
+  #app { display: none; flex-direction: column; height: 100%; }
+  #app.visible { display: flex; }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--orange) 0%, var(--coral) 100%);
+    padding: 16px 20px 12px; color: white; position: relative; flex-shrink: 0;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .app-title { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+  .header-date { font-size: 0.8rem; opacity: 0.85; font-weight: 600; }
+  .btn-icon { background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 1.1rem; transition: background .2s; }
+  .btn-icon:active { background: rgba(255,255,255,0.35); }
+
+  /* ── POINTS RING ── */
+  .points-ring-wrap { display: flex; justify-content: center; padding: 8px 0 12px; }
+  .ring-container { position: relative; width: 130px; height: 130px; }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 10; }
+  .ring-fill { fill: none; stroke: var(--yellow); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1); }
+  .ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-pts { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: white; line-height: 1; }
+  .ring-label { font-size: 0.7rem; color: rgba(255,255,255,0.8); font-weight: 700; margin-top: 2px; }
+
+  /* ── MINI STATS ── */
+  .mini-stats { display: flex; gap: 8px; padding: 0 16px 12px; }
+  .mini-stat { flex: 1; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 8px 10px; text-align: center; }
+  .mini-stat-val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: white; }
+  .mini-stat-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  /* ── NAV ── */
+  .bottom-nav {
+    display: flex; background: white; border-top: 2px solid var(--border);
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom)); flex-shrink: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; cursor: pointer; padding: 4px 0; color: var(--text2); transition: color .2s; }
+  .nav-btn.active { color: var(--orange); }
+  .nav-icon { font-size: 1.3rem; }
+  .nav-label { font-size: 0.62rem; font-weight: 700; }
+
+  /* ── PAGES ── */
+  .pages { flex: 1; overflow: hidden; position: relative; }
+  .page { position: absolute; inset: 0; overflow-y: auto; padding: 16px; display: none; flex-direction: column; gap: 14px; }
+  .page.active { display: flex; }
+  .page::-webkit-scrollbar { display: none; }
+
+  /* ── CARDS ── */
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-orange { background: #ffe8d6; color: var(--orange); }
+
+  /* ── CALCULATEUR ── */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .calc-field { display: flex; flex-direction: column; gap: 5px; }
+  .calc-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); }
+  .calc-input { border: 2px solid var(--border); border-radius: 10px; padding: 10px 12px; font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; outline: none; transition: border-color .2s; background: var(--bg); }
+  .calc-input:focus { border-color: var(--orange); background: white; }
+  .calc-input.full { grid-column: 1 / -1; }
+  .calc-result { background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .calc-result-pts { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+  .calc-result-label { font-size: 0.8rem; opacity: 0.9; font-weight: 600; }
+  .zero-badge { background: var(--green); color: white; border-radius: 20px; padding: 4px 10px; font-size: 0.75rem; font-weight: 700; }
+  .btn-add { background: white; color: var(--orange); border: 2px solid var(--orange); border-radius: 10px; padding: 10px 18px; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all .2s; margin-top: 8px; width: 100%; }
+  .btn-add:active { background: var(--orange); color: white; }
+
+  /* ── JOURNAL ── */
+  .meal-section { margin-bottom: 8px; }
+  .meal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .meal-name { font-size: 0.85rem; font-weight: 700; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .meal-pts { font-size: 0.85rem; font-weight: 800; color: var(--orange); }
+  .food-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg); border-radius: 10px; margin-bottom: 6px; }
+  .food-item-info { flex: 1; }
+  .food-item-name { font-size: 0.9rem; font-weight: 700; }
+  .food-item-detail { font-size: 0.72rem; color: var(--text2); font-weight: 600; }
+  .food-item-pts { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--orange); }
+  .food-item-del { background: none; border: none; color: #e74c3c; font-size: 1rem; cursor: pointer; padding: 4px; border-radius: 50%; }
+  .food-item-pts.zero { color: var(--green); }
+  .empty-journal { text-align: center; color: var(--text2); font-size: 0.9rem; padding: 30px 0; }
+  .empty-journal span { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+  /* ── WEEKLY BONUS ── */
+  .weekly-bar { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .weekly-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--pink)); border-radius: 10px; transition: width .5s; }
+
+  /* ── BIBLIOTHÈQUE ── */
+  .lib-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: background .15s; }
+  .lib-item:active { background: #ffe8d6; }
+  .lib-item-emoji { font-size: 1.5rem; width: 40px; text-align: center; }
+  .lib-item-info { flex: 1; }
+  .lib-item-name { font-size: 0.9rem; font-weight: 700; }
+  .lib-item-pts { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: var(--orange); }
+  .lib-item-del { background: none; border: none; color: #ccc; font-size: 1rem; cursor: pointer; }
+  .lib-search { border: 2px solid var(--border); border-radius: 12px; padding: 10px 14px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; width: 100%; outline: none; transition: border-color .2s; background: white; }
+  .lib-search:focus { border-color: var(--orange); }
+
+  /* ── POIDS ── */
+  .weight-form { display: flex; gap: 8px; align-items: center; }
+  .weight-input { flex: 1; border: 2px solid var(--border); border-radius: 12px; padding: 12px 16px; font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 700; outline: none; }
+  .weight-input:focus { border-color: var(--orange); }
+  .btn-round { background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border: none; border-radius: 12px; padding: 12px 18px; font-size: 1rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .weight-history { display: flex; flex-direction: column; gap: 6px; }
+  .weight-entry { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg); border-radius: 12px; }
+  .weight-val { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--orange); }
+  .weight-date { font-size: 0.75rem; color: var(--text2); font-weight: 600; }
+  .weight-diff { font-size: 0.8rem; font-weight: 700; }
+  .weight-diff.good { color: var(--green); }
+  .weight-diff.bad { color: #e74c3c; }
+  .weight-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .w-stat { background: var(--bg); border-radius: 12px; padding: 10px; text-align: center; }
+  .w-stat-val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--purple); }
+  .w-stat-lbl { font-size: 0.65rem; color: var(--text2); font-weight: 600; }
+
+  /* ── PROFIL ── */
+  .profile-form { display: flex; flex-direction: column; gap: 12px; }
+  .profile-field { display: flex; flex-direction: column; gap: 5px; }
+  .profile-label { font-size: 0.8rem; font-weight: 700; color: var(--text2); }
+  .profile-input, .profile-select { border: 2px solid var(--border); border-radius: 12px; padding: 11px 14px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; outline: none; transition: border-color .2s; background: white; }
+  .profile-input:focus, .profile-select:focus { border-color: var(--orange); }
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .avatar-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--yellow)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+  .avatar-info { flex: 1; }
+  .avatar-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; }
+  .avatar-email { font-size: 0.75rem; color: var(--text2); }
+  .btn-danger { background: #fff0f0; color: #e74c3c; border: 2px solid #fcc; border-radius: 12px; padding: 12px; font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; width: 100%; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; padding: 0; transition: opacity .25s; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: white; border-radius: 24px 24px 0 0; padding: 20px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp .25s ease-out; }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; }
+  .modal-close { background: var(--bg); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1rem; }
+  .meal-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .meal-chip { padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all .15s; background: white; }
+  .meal-chip.selected { background: var(--orange); color: white; border-color: var(--orange); }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; z-index: 500; opacity: 0; transition: all .3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── CHART simple ── */
+  .weight-chart { width: 100%; height: 100px; position: relative; }
+  .chart-line { stroke: var(--orange); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .chart-area { fill: url(#chartGrad); opacity: 0.3; }
+  .chart-dot { fill: var(--orange); }
+
+  .section-day-nav { display: flex; align-items: center; justify-content: space-between; }
+  .day-nav-btn { background: var(--bg); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .day-label { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+
+  .pts-chip { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 800; }
+
+  .profile-budget-box { background: linear-gradient(135deg, #fff0e8, #ffe8d6); border-radius: 14px; padding: 14px; text-align: center; }
+  .profile-budget-val { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--orange); }
+  .profile-budget-lbl { font-size: 0.8rem; color: var(--text2); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">PointFit 🎯</div>
+  <div class="splash-sub">Ton coach nutrition personnel</div>
+  <div class="splash-spin"></div>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen" class="hidden">
+  <div class="auth-logo">PointFit 🎯</div>
+  <div class="auth-card">
+    <div class="auth-title" id="auth-title">Connexion</div>
+    <div class="auth-error" id="auth-error"></div>
+    <input class="auth-input" type="email" id="auth-email" placeholder="Email">
+    <input class="auth-input" type="password" id="auth-password" placeholder="Mot de passe">
+    <input class="auth-input" type="text" id="auth-name" placeholder="Prénom" style="display:none">
+    <button class="btn-primary" id="auth-btn">Se connecter</button>
+    <div class="auth-divider">ou</div>
+    <button class="btn-demo" id="demo-btn">🎮 Essayer en mode démo</button>
+    <div class="auth-switch" id="auth-switch">Pas de compte ? <span>S'inscrire</span></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Demo banner -->
+  <div class="demo-banner" id="demo-banner-app">
+    🎮 Mode démo — données non sauvegardées en ligne
+  </div>
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">PointFit 🎯</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+      <button class="btn-icon" onclick="showPage('profil')">👤</button>
+    </div>
+    <div class="points-ring-wrap">
+      <div class="ring-container">
+        <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+          <circle class="ring-bg" cx="65" cy="65" r="54"/>
+          <circle class="ring-fill" id="ring-fill" cx="65" cy="65" r="54" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-pts" id="ring-remaining">--</div>
+          <div class="ring-label">restants</div>
+        </div>
+      </div>
+    </div>
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-used">0</div>
+        <div class="mini-stat-lbl">Utilisés</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-budget">--</div>
+        <div class="mini-stat-lbl">Budget</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-weekly">35</div>
+        <div class="mini-stat-lbl">Bonus semaine</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages">
+    <!-- Page Journal -->
+    <div class="page active" id="page-journal">
+      <div class="card">
+        <div class="card-title section-day-nav">
+          <button class="day-nav-btn" onclick="changeDay(-1)">‹</button>
+          <span id="journal-day-label">Aujourd'hui</span>
+          <button class="day-nav-btn" onclick="changeDay(1)">›</button>
+        </div>
+        <div id="journal-content"></div>
+      </div>
+      <div class="card" id="weekly-card">
+        <div class="card-title">🎁 Points bonus hebdomadaires</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:0.85rem;color:var(--text2);font-weight:600">Utilisés ce mois</span>
+          <span id="weekly-used-label" style="font-weight:800;color:var(--purple)">0 / 35</span>
+        </div>
+        <div class="weekly-bar"><div class="weekly-fill" id="weekly-bar-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Page Calculateur -->
+    <div class="page" id="page-calc">
+      <div class="card">
+        <div class="card-title">🔢 Calculer les points</div>
+        <div class="calc-grid">
+          <div class="calc-field">
+            <label class="calc-label">Calories (kcal)</label>
+            <input class="calc-input" type="number" id="c-cal" placeholder="0" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Protéines (g)</label>
+            <input class="calc-input" type="number" id="c-prot" placeholder="0" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Graisses sat. (g)</label>
+            <input class="calc-input" type="number" id="c-sat" placeholder="0" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Sucres (g)</label>
+            <input class="calc-input" type="number" id="c-sugar" placeholder="0" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Fibres (g)</label>
+            <input class="calc-input" type="number" id="c-fiber" placeholder="0" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Portion (g)</label>
+            <input class="calc-input" type="number" id="c-portion" placeholder="100" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field" style="grid-column:1/-1">
+            <label class="calc-label">Nom de l'aliment</label>
+            <input class="calc-input" type="text" id="c-name" placeholder="ex: Yaourt nature">
+          </div>
+        </div>
+        <div class="calc-result" id="calc-result-box" style="margin-top:12px">
+          <div>
+            <div class="calc-result-pts" id="calc-pts">0</div>
+            <div class="calc-result-label" id="calc-pts-label">points</div>
+          </div>
+          <div id="calc-zero-badge"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-add" onclick="openAddModal()" style="flex:1">➕ Ajouter au journal</button>
+          <button class="btn-add" onclick="saveToLibrary()" style="flex:0.6">💾 Bibliothèque</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">ℹ️ Comment sont calculés les points ?</div>
+        <div style="font-size:0.82rem;color:var(--text2);line-height:1.6">
+          La formule est inspirée du système WW SmartPoints :<br><br>
+          <strong>Points = (Cal × 0.0305) + (Graisses sat. × 0.275) + (Sucres × 0.12) − (Protéines × 0.098) − (Fibres × 0.07)</strong><br><br>
+          Un résultat ≤ 0 donne <strong style="color:var(--green)">0 point</strong> (aliment ZeroPoint 🟢).
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Bibliothèque -->
+    <div class="page" id="page-biblio">
+      <div class="card">
+        <div class="card-title">📚 Mes aliments</div>
+        <input class="lib-search" id="lib-search" placeholder="🔍 Rechercher..." oninput="renderLibrary()">
+      </div>
+      <div class="card">
+        <div id="library-list"></div>
+        <div id="library-empty" style="text-align:center;color:var(--text2);padding:20px;display:none">
+          <div style="font-size:2rem">📭</div>
+          <div style="font-size:0.9rem;margin-top:8px">Aucun aliment sauvegardé.<br>Calcule un aliment et enregistre-le !</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Poids -->
+    <div class="page" id="page-poids">
+      <div class="card">
+        <div class="card-title">⚖️ Enregistrer mon poids</div>
+        <div class="weight-form">
+          <input class="weight-input" type="number" id="weight-input" placeholder="Ex: 72.5" step="0.1" min="30" max="300">
+          <button class="btn-round" onclick="addWeight()">Ajouter</button>
+        </div>
+      </div>
+      <div class="card" id="weight-stats-card" style="display:none">
+        <div class="card-title">📊 Statistiques</div>
+        <div class="weight-stats">
+          <div class="w-stat"><div class="w-stat-val" id="ws-start">--</div><div class="w-stat-lbl">Début</div></div>
+          <div class="w-stat"><div class="w-stat-val" id="ws-current">--</div><div class="w-stat-lbl">Actuel</div></div>
+          <div class="w-stat"><div class="w-stat-val" id="ws-diff">--</div><div class="w-stat-lbl">Évolution</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <svg class="weight-chart" id="weight-svg" viewBox="0 0 300 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FF6B35"/>
+                <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 Historique</div>
+        <div id="weight-history"></div>
+        <div id="weight-empty" style="text-align:center;color:var(--text2);padding:20px">
+          <div style="font-size:2rem">⚖️</div>
+          <div style="font-size:0.9rem;margin-top:8px">Aucune mesure enregistrée</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Profil -->
+    <div class="page" id="page-profil">
+      <div class="card">
+        <div class="avatar-row">
+          <div class="avatar" id="profile-avatar">😊</div>
+          <div class="avatar-info">
+            <div class="avatar-name" id="profile-display-name">Mon profil</div>
+            <div class="avatar-email" id="profile-display-email"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚙️ Mon profil</div>
+        <div class="profile-form">
+          <div class="profile-grid">
+            <div class="profile-field">
+              <label class="profile-label">Poids actuel (kg)</label>
+              <input class="profile-input" type="number" id="p-weight" placeholder="70" step="0.1">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Objectif (kg)</label>
+              <input class="profile-input" type="number" id="p-goal" placeholder="65" step="0.1">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Âge</label>
+              <input class="profile-input" type="number" id="p-age" placeholder="30">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Sexe</label>
+              <select class="profile-select" id="p-sex">
+                <option value="f">Femme</option>
+                <option value="m">Homme</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-field">
+            <label class="profile-label">Activité physique</label>
+            <select class="profile-select" id="p-activity">
+              <option value="1">Sédentaire</option>
+              <option value="2">Légèrement actif</option>
+              <option value="3">Modérément actif</option>
+              <option value="4">Très actif</option>
+            </select>
+          </div>
+          <div class="profile-budget-box">
+            <div class="profile-budget-val" id="profile-budget-val">--</div>
+            <div class="profile-budget-lbl">points / jour calculés</div>
+          </div>
+          <button class="btn-primary" onclick="saveProfile()">💾 Sauvegarder</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚪 Compte</div>
+        <button class="btn-danger" onclick="signOut()">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-journal" onclick="showPage('journal')">
+      <span class="nav-icon">📓</span>
+      <span class="nav-label">Journal</span>
+    </button>
+    <button class="nav-btn" id="nav-calc" onclick="showPage('calc')">
+      <span class="nav-icon">🔢</span>
+      <span class="nav-label">Calculer</span>
+    </button>
+    <button class="nav-btn" id="nav-biblio" onclick="showPage('biblio')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Aliments</span>
+    </button>
+    <button class="nav-btn" id="nav-poids" onclick="showPage('poids')">
+      <span class="nav-icon">⚖️</span>
+      <span class="nav-label">Poids</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Modal ajouter au journal -->
+<div class="modal-overlay hidden" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Ajouter au journal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="margin-bottom:10px;font-size:0.85rem;color:var(--text2);font-weight:600">Repas :</div>
+    <div class="meal-chips">
+      <button class="meal-chip selected" onclick="selectMeal('petit-dejeuner',this)">🌅 Petit-déj.</button>
+      <button class="meal-chip" onclick="selectMeal('dejeuner',this)">🌞 Déjeuner</button>
+      <button class="meal-chip" onclick="selectMeal('diner',this)">🌙 Dîner</button>
+      <button class="meal-chip" onclick="selectMeal('collation',this)">🍎 Collation</button>
+    </div>
+    <div style="margin-bottom:10px;font-size:0.85rem;color:var(--text2);font-weight:600">Quantité (g) :</div>
+    <input class="calc-input" type="number" id="modal-qty" placeholder="100" value="100" min="1" style="width:100%;margin-bottom:14px" oninput="updateModalPts()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;background:var(--bg);padding:12px;border-radius:12px">
+      <span style="font-weight:700">Points calculés :</span>
+      <span class="pts-chip" id="modal-pts-display">0 pts</span>
+    </div>
+    <button class="btn-primary" onclick="confirmAddToJournal()">✅ Ajouter</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, addDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ═══════════════════════════
+// 🔥 FIREBASE CONFIG — À remplacer par ta config
+// ═══════════════════════════
+const firebaseConfig = {
+  apiKey: "VOTRE_API_KEY",
+  authDomain: "VOTRE_PROJECT.firebaseapp.com",
+  projectId: "VOTRE_PROJECT_ID",
+  storageBucket: "VOTRE_PROJECT.appspot.com",
+  messagingSenderId: "VOTRE_SENDER_ID",
+  appId: "VOTRE_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── STATE ──
+let currentUser = null;
+let isDemoMode = false;
+let profile = { budget: 23, weight: 0, goal: 0, age: 30, sex: 'f', activity: '1' };
+let library = [];
+let journal = {};
+let weights = [];
+let weeklyUsed = 0;
+let currentMeal = 'petit-dejeuner';
+let journalOffset = 0;
+let unsubJournal = null, unsubWeights = null, unsubProfile = null, unsubLibrary = null;
+
+// ── UTILS ──
+function todayStr(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().split('T')[0];
+}
+function formatDate(str) {
+  const [y,m,d] = str.split('-');
+  return `${d}/${m}/${y}`;
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+function calcPts(cal=0, prot=0, sat=0, sugar=0, fiber=0) {
+  const raw = (cal*0.0305) + (sat*0.275) + (sugar*0.12) - (prot*0.098) - (fiber*0.07);
+  return Math.max(0, Math.round(raw));
+}
+function calcBudget(weight, age, sex, activity) {
+  // Budget adapté inspiré WW
+  let base = sex === 'm' ? 26 : 23;
+  if (weight > 90) base += 4;
+  else if (weight > 75) base += 2;
+  else if (weight > 60) base += 1;
+  if (age < 25) base += 2;
+  else if (age > 55) base -= 1;
+  base += parseInt(activity) - 1;
+  return Math.max(18, Math.min(45, base));
+}
+
+// ── DEMO MODE ──
+function launchDemo() {
+  isDemoMode = true;
+  currentUser = { uid: 'demo', displayName: 'Utilisateur Démo', email: 'demo@pointfit.app' };
+
+  // Profil démo
+  profile = { budget: 26, weight: 78, goal: 70, age: 32, sex: 'm', activity: '2' };
+
+  // Journal démo — aujourd'hui pré-rempli
+  const t = todayStr();
+  const y = todayStr(-1);
+  journal[t] = { meals: {
+    'petit-dejeuner': [
+      { name: 'Flocons d\'avoine', cal: 150, prot: 5, sat: 0.5, sugar: 2, fiber: 3, qty: 60, pts: calcPts(90, 3, 0.3, 1.2, 1.8) },
+      { name: 'Banane', cal: 89, prot: 1.1, sat: 0.1, sugar: 12, fiber: 2.6, qty: 100, pts: 0 },
+    ],
+    'dejeuner': [
+      { name: 'Blanc de poulet grillé', cal: 165, prot: 31, sat: 1, sugar: 0, fiber: 0, qty: 150, pts: calcPts(247.5, 46.5, 1.5, 0, 0) },
+      { name: 'Riz blanc cuit', cal: 130, prot: 2.7, sat: 0.1, sugar: 0, fiber: 0.4, qty: 150, pts: calcPts(195, 4, 0.15, 0, 0.6) },
+      { name: 'Salade verte', cal: 15, prot: 1.3, sat: 0, sugar: 1, fiber: 1.5, qty: 80, pts: 0 },
+    ],
+    'collation': [
+      { name: 'Yaourt nature 0%', cal: 56, prot: 8, sat: 0.1, sugar: 6, fiber: 0, qty: 125, pts: calcPts(70, 10, 0.1, 7.5, 0) },
+    ],
+    'diner': [],
+  }};
+  journal[y] = { meals: {
+    'petit-dejeuner': [
+      { name: 'Toast complet', cal: 70, prot: 3, sat: 0.3, sugar: 1.5, fiber: 2, qty: 40, pts: calcPts(28, 1.2, 0.12, 0.6, 0.8) },
+    ],
+    'dejeuner': [
+      { name: 'Saumon grillé', cal: 208, prot: 20, sat: 3, sugar: 0, fiber: 0, qty: 120, pts: calcPts(250, 24, 3.6, 0, 0) },
+      { name: 'Brocolis vapeur', cal: 35, prot: 2.8, sat: 0, sugar: 1.7, fiber: 2.6, qty: 100, pts: 0 },
+    ],
+    'diner': [
+      { name: 'Omelette 2 œufs', cal: 148, prot: 12, sat: 2.8, sugar: 0.4, fiber: 0, qty: 110, pts: calcPts(163, 13.2, 3.1, 0.44, 0) },
+    ],
+    'collation': [],
+  }};
+
+  // Bibliothèque démo
+  library = [
+    { id: 'd1', name: 'Blanc de poulet', emoji: '🍗', cal: 165, prot: 31, sat: 1, sugar: 0, fiber: 0, portion: 100, pts: calcPts(165, 31, 1, 0, 0) },
+    { id: 'd2', name: 'Riz blanc cuit', emoji: '🍚', cal: 130, prot: 2.7, sat: 0.1, sugar: 0, fiber: 0.4, portion: 100, pts: calcPts(130, 2.7, 0.1, 0, 0.4) },
+    { id: 'd3', name: 'Yaourt nature 0%', emoji: '🥛', cal: 45, prot: 6.4, sat: 0.1, sugar: 4.8, fiber: 0, portion: 100, pts: calcPts(45, 6.4, 0.1, 4.8, 0) },
+    { id: 'd4', name: 'Banane', emoji: '🍌', cal: 89, prot: 1.1, sat: 0.1, sugar: 12, fiber: 2.6, portion: 100, pts: 0 },
+    { id: 'd5', name: 'Saumon grillé', emoji: '🐟', cal: 208, prot: 20, sat: 3, sugar: 0, fiber: 0, portion: 100, pts: calcPts(208, 20, 3, 0, 0) },
+    { id: 'd6', name: 'Flocons d\'avoine', emoji: '🌾', cal: 250, prot: 8, sat: 0.8, sugar: 3.4, fiber: 5, portion: 100, pts: calcPts(250, 8, 0.8, 3.4, 5) },
+    { id: 'd7', name: 'Œuf entier', emoji: '🥚', cal: 155, prot: 13, sat: 3.3, sugar: 0.6, fiber: 0, portion: 100, pts: calcPts(155, 13, 3.3, 0.6, 0) },
+    { id: 'd8', name: 'Pomme', emoji: '🍎', cal: 52, prot: 0.3, sat: 0, sugar: 10.4, fiber: 2.4, portion: 100, pts: 0 },
+  ];
+
+  // Historique poids démo
+  const base = new Date(); base.setDate(base.getDate() - 30);
+  const wVals = [80.2, 79.8, 79.5, 79.6, 79.1, 78.9, 78.7, 79.0, 78.5, 78.3, 78.0, 78.2, 77.8, 77.6, 77.9, 77.4, 77.2, 77.5, 77.0, 76.8, 77.1, 76.6, 76.4, 76.7, 76.2, 76.0, 76.3, 75.9, 75.7, 78.0];
+  weights = wVals.map((v, i) => {
+    const d = new Date(base); d.setDate(d.getDate() + i);
+    return { id: 'w' + i, date: d.toISOString().split('T')[0], value: v, ts: d.getTime() };
+  });
+
+  // Afficher app
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('demo-banner-app').style.display = 'block';
+  document.getElementById('app').classList.add('visible');
+  setupHeader();
+  loadProfileUI();
+  renderJournal();
+  renderLibrary();
+  renderWeights();
+  updateHeader();
+  toast('🎮 Bienvenue en mode démo !');
+}
+
+document.getElementById('demo-btn').onclick = launchDemo;
+let authMode = 'login';
+window.toggleAuthMode = () => {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('auth-title').textContent = authMode === 'login' ? 'Connexion' : 'Inscription';
+  document.getElementById('auth-btn').textContent = authMode === 'login' ? 'Se connecter' : 'Créer mon compte';
+  document.getElementById('auth-switch').innerHTML = authMode === 'login'
+    ? "Pas de compte ? <span>S'inscrire</span>"
+    : "Déjà un compte ? <span>Se connecter</span>";
+  document.getElementById('auth-name').style.display = authMode === 'register' ? 'block' : 'none';
+  document.getElementById('auth-error').classList.remove('show');
+};
+document.getElementById('auth-switch').onclick = window.toggleAuthMode;
+
+document.getElementById('auth-btn').onclick = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pwd = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+  const errEl = document.getElementById('auth-error');
+  errEl.classList.remove('show');
+  try {
+    if (authMode === 'register') {
+      const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+      if (name) await updateProfile(cred.user, { displayName: name });
+    } else {
+      await signInWithEmailAndPassword(auth, email, pwd);
+    }
+  } catch(e) {
+    const msgs = {
+      'auth/email-already-in-use': 'Email déjà utilisé.',
+      'auth/invalid-email': 'Email invalide.',
+      'auth/weak-password': 'Mot de passe trop court (6 chars min).',
+      'auth/user-not-found': 'Aucun compte avec cet email.',
+      'auth/wrong-password': 'Mot de passe incorrect.',
+      'auth/invalid-credential': 'Email ou mot de passe incorrect.',
+    };
+    errEl.textContent = msgs[e.code] || e.message;
+    errEl.classList.add('show');
+  }
+};
+
+window.signOut = async () => {
+  if (isDemoMode) {
+    isDemoMode = false;
+    currentUser = null;
+    journal = {}; library = []; weights = [];
+    document.getElementById('demo-banner-app').style.display = 'none';
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    return;
+  }
+  if(unsubJournal) unsubJournal();
+  if(unsubWeights) unsubWeights();
+  if(unsubProfile) unsubProfile();
+  if(unsubLibrary) unsubLibrary();
+  await fbSignOut(auth);
+};
+
+onAuthStateChanged(auth, async user => {
+  document.getElementById('splash').classList.add('hide');
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    setupHeader();
+    subscribeData();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app').classList.remove('visible');
+  }
+});
+
+// ── FIRESTORE SUBSCRIPTIONS ──
+function subscribeData() {
+  const uid = currentUser.uid;
+
+  // Profile
+  unsubProfile = onSnapshot(doc(db, 'users', uid, 'data', 'profile'), snap => {
+    if (snap.exists()) {
+      profile = { ...profile, ...snap.data() };
+      loadProfileUI();
+      updateHeader();
+    }
+  });
+
+  // Library
+  unsubLibrary = onSnapshot(collection(db, 'users', uid, 'library'), snap => {
+    library = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderLibrary();
+  });
+
+  // Journal (last 60 days loaded lazily by key)
+  loadJournalDay(todayStr());
+
+  // Weights
+  unsubWeights = onSnapshot(query(collection(db, 'users', uid, 'weights'), orderBy('date', 'asc')), snap => {
+    weights = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWeights();
+  });
+}
+
+async function loadJournalDay(dateStr) {
+  if (journal[dateStr] !== undefined) return;
+  if (isDemoMode) { journal[dateStr] = { meals: {} }; renderJournal(); updateHeader(); return; }
+  const uid = currentUser.uid;
+  const snap = await getDoc(doc(db, 'users', uid, 'journal', dateStr));
+  journal[dateStr] = snap.exists() ? snap.data() : { meals: {} };
+  renderJournal();
+  updateHeader();
+}
+
+async function saveJournalDay(dateStr) {
+  if (isDemoMode) return;
+  const uid = currentUser.uid;
+  await setDoc(doc(db, 'users', uid, 'journal', dateStr), journal[dateStr]);
+}
+
+async function saveProfileDb() {
+  if (isDemoMode) return;
+  const uid = currentUser.uid;
+  await setDoc(doc(db, 'users', uid, 'data', 'profile'), profile);
+}
+
+// ── HEADER ──
+function setupHeader() {
+  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const months = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const now = new Date();
+  document.getElementById('header-date').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+  document.getElementById('profile-display-name').textContent = currentUser.displayName || 'Mon profil';
+  document.getElementById('profile-display-email').textContent = currentUser.email;
+  if (currentUser.displayName) {
+    document.getElementById('profile-avatar').textContent = currentUser.displayName[0].toUpperCase();
+  }
+}
+
+function updateHeader() {
+  const dateStr = todayStr();
+  const dayData = journal[dateStr];
+  let used = 0;
+  if (dayData) {
+    Object.values(dayData.meals || {}).forEach(items => {
+      items.forEach(i => used += i.pts || 0);
+    });
+  }
+  const budget = profile.budget || 23;
+  const remaining = budget - used;
+  document.getElementById('ring-remaining').textContent = remaining;
+  document.getElementById('stat-used').textContent = used;
+  document.getElementById('stat-budget').textContent = budget;
+  const pct = Math.min(1, used / budget);
+  const circ = 339.3;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ * (1 - pct);
+  document.getElementById('ring-fill').style.stroke = remaining < 3 ? '#e74c3c' : 'var(--yellow)';
+  // weekly
+  const wUsed = getWeeklyUsed();
+  document.getElementById('stat-weekly').textContent = Math.max(0, 35 - wUsed);
+  document.getElementById('weekly-used-label').textContent = `${wUsed} / 35`;
+  document.getElementById('weekly-bar-fill').style.width = Math.min(100, (wUsed/35)*100) + '%';
+}
+
+function getWeeklyUsed() {
+  // sum used points this week (Mon-Sun)
+  const now = new Date();
+  const day = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  let total = 0;
+  for (let i = 0; i <= day; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const str = d.toISOString().split('T')[0];
+    const dayData = journal[str];
+    if (dayData) {
+      Object.values(dayData.meals || {}).forEach(items => {
+        items.forEach(item => total += item.pts || 0);
+      });
+    }
+  }
+  return Math.max(0, total - (profile.budget || 23) * (day + 1));
+}
+
+// ── JOURNAL ──
+const mealLabels = { 'petit-dejeuner': '🌅 Petit-déjeuner', 'dejeuner': '🌞 Déjeuner', 'diner': '🌙 Dîner', 'collation': '🍎 Collation' };
+const mealOrder = ['petit-dejeuner', 'dejeuner', 'collation', 'diner'];
+
+window.changeDay = (dir) => {
+  journalOffset += dir;
+  if (journalOffset > 0) journalOffset = 0;
+  const dateStr = todayStr(journalOffset);
+  loadJournalDay(dateStr);
+  const label = journalOffset === 0 ? "Aujourd'hui" : journalOffset === -1 ? "Hier" : formatDate(dateStr);
+  document.getElementById('journal-day-label').textContent = label;
+};
+
+function renderJournal() {
+  const dateStr = todayStr(journalOffset);
+  const dayData = journal[dateStr] || { meals: {} };
+  const cont = document.getElementById('journal-content');
+  let html = '';
+  let total = 0;
+  mealOrder.forEach(meal => {
+    const items = (dayData.meals || {})[meal] || [];
+    const mPts = items.reduce((s, i) => s + (i.pts || 0), 0);
+    total += mPts;
+    html += `<div class="meal-section">
+      <div class="meal-header">
+        <span class="meal-name">${mealLabels[meal]}</span>
+        <span class="meal-pts">${mPts} pts</span>
+      </div>`;
+    if (items.length === 0) {
+      html += `<div style="color:var(--text2);font-size:0.8rem;padding:4px 0 8px;font-style:italic">Rien ajouté</div>`;
+    }
+    items.forEach((item, idx) => {
+      html += `<div class="food-item">
+        <div class="food-item-info">
+          <div class="food-item-name">${item.name}</div>
+          <div class="food-item-detail">${item.qty || 100}g · ${item.cal||0} kcal · P:${item.prot||0}g</div>
+        </div>
+        <span class="food-item-pts ${item.pts === 0 ? 'zero' : ''}">${item.pts === 0 ? '🟢 0' : item.pts} pts</span>
+        <button class="food-item-del" onclick="deleteJournalItem('${meal}', ${idx})">🗑</button>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  if (total === 0) {
+    cont.innerHTML = `<div class="empty-journal"><span>📓</span>Commence à ajouter<br>tes repas !</div>`;
+  } else {
+    cont.innerHTML = html;
+  }
+  if (journalOffset === 0) updateHeader();
+}
+
+window.deleteJournalItem = async (meal, idx) => {
+  const dateStr = todayStr(journalOffset);
+  if (!journal[dateStr]) return;
+  journal[dateStr].meals[meal].splice(idx, 1);
+  renderJournal();
+  await saveJournalDay(dateStr);
+  updateHeader();
+  toast('Aliment supprimé');
+};
+
+// ── CALCULATEUR ──
+window.calcPoints = () => {
+  const cal = parseFloat(document.getElementById('c-cal').value) || 0;
+  const prot = parseFloat(document.getElementById('c-prot').value) || 0;
+  const sat = parseFloat(document.getElementById('c-sat').value) || 0;
+  const sugar = parseFloat(document.getElementById('c-sugar').value) || 0;
+  const fiber = parseFloat(document.getElementById('c-fiber').value) || 0;
+  const portion = parseFloat(document.getElementById('c-portion').value) || 100;
+  const factor = portion / 100;
+  const pts = calcPts(cal * factor, prot * factor, sat * factor, sugar * factor, fiber * factor);
+  document.getElementById('calc-pts').textContent = pts;
+  document.getElementById('calc-zero-badge').innerHTML = pts === 0 ? '<span class="zero-badge">🟢 ZeroPoint</span>' : '';
+  document.getElementById('calc-pts-label').textContent = pts === 1 ? 'point' : 'points';
+};
+
+// ── MODAL ──
+let modalCalcData = {};
+window.openAddModal = () => {
+  const cal = parseFloat(document.getElementById('c-cal').value) || 0;
+  if (cal === 0 && !document.getElementById('c-name').value) { toast('Remplis au moins les calories'); return; }
+  modalCalcData = {
+    name: document.getElementById('c-name').value || 'Aliment',
+    cal: parseFloat(document.getElementById('c-cal').value) || 0,
+    prot: parseFloat(document.getElementById('c-prot').value) || 0,
+    sat: parseFloat(document.getElementById('c-sat').value) || 0,
+    sugar: parseFloat(document.getElementById('c-sugar').value) || 0,
+    fiber: parseFloat(document.getElementById('c-fiber').value) || 0,
+    basePortion: parseFloat(document.getElementById('c-portion').value) || 100,
+  };
+  document.getElementById('modal-qty').value = modalCalcData.basePortion;
+  updateModalPts();
+  document.getElementById('add-modal').classList.remove('hidden');
+};
+window.closeModal = () => document.getElementById('add-modal').classList.add('hidden');
+window.updateModalPts = () => {
+  const qty = parseFloat(document.getElementById('modal-qty').value) || 100;
+  const f = qty / 100;
+  const pts = calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
+  document.getElementById('modal-pts-display').textContent = pts + ' pts';
+  document.getElementById('modal-pts-display').dataset.pts = pts;
+};
+window.selectMeal = (meal, el) => {
+  currentMeal = meal;
+  document.querySelectorAll('.meal-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+};
+window.confirmAddToJournal = async () => {
+  const qty = parseFloat(document.getElementById('modal-qty').value) || 100;
+  const f = qty / 100;
+  const pts = calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
+  const dateStr = todayStr(journalOffset);
+  if (!journal[dateStr]) journal[dateStr] = { meals: {} };
+  if (!journal[dateStr].meals[currentMeal]) journal[dateStr].meals[currentMeal] = [];
+  journal[dateStr].meals[currentMeal].push({
+    name: modalCalcData.name,
+    cal: Math.round(modalCalcData.cal * f),
+    prot: Math.round(modalCalcData.prot * f * 10) / 10,
+    sat: Math.round(modalCalcData.sat * f * 10) / 10,
+    sugar: Math.round(modalCalcData.sugar * f * 10) / 10,
+    fiber: Math.round(modalCalcData.fiber * f * 10) / 10,
+    qty: Math.round(qty),
+    pts,
+  });
+  closeModal();
+  renderJournal();
+  updateHeader();
+  await saveJournalDay(dateStr);
+  toast(`✅ Ajouté au journal ! (${pts} pt${pts>1?'s':''})`);
+  showPage('journal');
+};
+
+// ── BIBLIOTHÈQUE ──
+window.saveToLibrary = async () => {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { toast('Donne un nom à l\'aliment'); return; }
+  const item = {
+    name, emoji: getEmoji(name),
+    cal: parseFloat(document.getElementById('c-cal').value) || 0,
+    prot: parseFloat(document.getElementById('c-prot').value) || 0,
+    sat: parseFloat(document.getElementById('c-sat').value) || 0,
+    sugar: parseFloat(document.getElementById('c-sugar').value) || 0,
+    fiber: parseFloat(document.getElementById('c-fiber').value) || 0,
+    portion: parseFloat(document.getElementById('c-portion').value) || 100,
+    savedAt: Date.now(),
+  };
+  item.pts = calcPts(item.cal, item.prot, item.sat, item.sugar, item.fiber);
+  if (isDemoMode) {
+    item.id = 'demo_' + Date.now();
+    library.push(item);
+    renderLibrary();
+    toast('💾 Aliment sauvegardé (démo) !');
+    return;
+  }
+  await addDoc(collection(db, 'users', currentUser.uid, 'library'), item);
+  toast('💾 Aliment sauvegardé !');
+};
+
+function getEmoji(name) {
+  const map = { pain:'🍞', riz:'🍚', pâtes:'🍝', poulet:'🍗', poisson:'🐟', salade:'🥗', pomme:'🍎', banane:'🍌', yaourt:'🥛', fromage:'🧀', oeuf:'🥚', oeuf:'🥚', chocolat:'🍫', café:'☕', eau:'💧', lait:'🥛', tomate:'🍅', carotte:'🥕', broccoli:'🥦' };
+  const lower = name.toLowerCase();
+  for (const [k, v] of Object.entries(map)) { if (lower.includes(k)) return v; }
+  return '🍽️';
+}
+
+function renderLibrary() {
+  const search = (document.getElementById('lib-search')?.value || '').toLowerCase();
+  const filtered = library.filter(i => i.name.toLowerCase().includes(search));
+  const list = document.getElementById('library-list');
+  const empty = document.getElementById('library-empty');
+  if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = filtered.map(item => `
+    <div class="lib-item" onclick="loadFromLibrary('${item.id}')">
+      <div class="lib-item-emoji">${item.emoji || '🍽️'}</div>
+      <div class="lib-item-info">
+        <div class="lib-item-name">${item.name}</div>
+        <div style="font-size:0.72rem;color:var(--text2)">${item.cal||0} kcal · P:${item.prot||0}g · ${item.portion||100}g</div>
+      </div>
+      <div class="lib-item-pts">${item.pts} pts</div>
+      <button class="lib-item-del" onclick="event.stopPropagation();deleteLibItem('${item.id}')">🗑</button>
+    </div>
+  `).join('');
+}
+
+window.loadFromLibrary = (id) => {
+  const item = library.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('c-name').value = item.name;
+  document.getElementById('c-cal').value = item.cal || 0;
+  document.getElementById('c-prot').value = item.prot || 0;
+  document.getElementById('c-sat').value = item.sat || 0;
+  document.getElementById('c-sugar').value = item.sugar || 0;
+  document.getElementById('c-fiber').value = item.fiber || 0;
+  document.getElementById('c-portion').value = item.portion || 100;
+  calcPoints();
+  showPage('calc');
+  toast(`📋 ${item.name} chargé`);
+};
+
+window.deleteLibItem = async (id) => {
+  if (isDemoMode) {
+    library = library.filter(i => i.id !== id);
+    renderLibrary();
+    toast('Aliment supprimé');
+    return;
+  }
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'library', id));
+  toast('Aliment supprimé');
+};
+
+// ── POIDS ──
+window.addWeight = async () => {
+  const val = parseFloat(document.getElementById('weight-input').value);
+  if (!val || val < 30 || val > 300) { toast('Poids invalide'); return; }
+  if (isDemoMode) {
+    weights.push({ id: 'dw_' + Date.now(), date: todayStr(), value: val, ts: Date.now() });
+    renderWeights();
+    document.getElementById('weight-input').value = '';
+    toast(`⚖️ ${val} kg enregistré (démo)`);
+    return;
+  }
+  await addDoc(collection(db, 'users', currentUser.uid, 'weights'), { date: todayStr(), value: val, ts: Date.now() });
+  document.getElementById('weight-input').value = '';
+  toast(`⚖️ ${val} kg enregistré`);
+};
+
+function renderWeights() {
+  const hist = document.getElementById('weight-history');
+  const empty = document.getElementById('weight-empty');
+  const statsCard = document.getElementById('weight-stats-card');
+  if (weights.length === 0) { hist.innerHTML = ''; empty.style.display = 'block'; statsCard.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  statsCard.style.display = 'block';
+  const sorted = [...weights].sort((a,b) => b.ts - a.ts);
+  const first = weights[0].value;
+  const last = sorted[0].value;
+  const diff = last - first;
+  document.getElementById('ws-start').textContent = first + ' kg';
+  document.getElementById('ws-current').textContent = last + ' kg';
+  const diffEl = document.getElementById('ws-diff');
+  diffEl.textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' kg';
+  diffEl.style.color = diff <= 0 ? 'var(--green)' : '#e74c3c';
+  hist.innerHTML = sorted.slice(0, 10).map((w, idx) => {
+    const prev = sorted[idx + 1];
+    const d = prev ? w.value - prev.value : 0;
+    return `<div class="weight-entry">
+      <div><div class="weight-val">${w.value} kg</div><div class="weight-date">${formatDate(w.date)}</div></div>
+      ${prev ? `<div class="weight-diff ${d <= 0 ? 'good' : 'bad'}">${d > 0 ? '+' : ''}${d.toFixed(1)} kg</div>` : '<div></div>'}
+    </div>`;
+  }).join('');
+  drawWeightChart();
+}
+
+function drawWeightChart() {
+  if (weights.length < 2) return;
+  const sorted = [...weights].sort((a,b) => a.ts - b.ts).slice(-15);
+  const vals = sorted.map(w => w.value);
+  const min = Math.min(...vals) - 1;
+  const max = Math.max(...vals) + 1;
+  const W = 300, H = 100;
+  const pts = sorted.map((w, i) => {
+    const x = (i / (sorted.length - 1)) * W;
+    const y = H - ((w.value - min) / (max - min)) * H;
+    return `${x},${y}`;
+  });
+  const svg = document.getElementById('weight-svg');
+  svg.innerHTML = `<defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/></linearGradient></defs>
+  <polyline class="chart-line" points="${pts.join(' ')}"/>
+  ${pts.map(p => `<circle class="chart-dot" cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3"/>`).join('')}`;
+}
+
+// ── PROFIL ──
+function loadProfileUI() {
+  document.getElementById('p-weight').value = profile.weight || '';
+  document.getElementById('p-goal').value = profile.goal || '';
+  document.getElementById('p-age').value = profile.age || '';
+  document.getElementById('p-sex').value = profile.sex || 'f';
+  document.getElementById('p-activity').value = profile.activity || '1';
+  updateBudgetPreview();
+}
+
+function updateBudgetPreview() {
+  const w = parseFloat(document.getElementById('p-weight').value) || 70;
+  const age = parseInt(document.getElementById('p-age').value) || 30;
+  const sex = document.getElementById('p-sex').value;
+  const act = document.getElementById('p-activity').value;
+  const b = calcBudget(w, age, sex, act);
+  document.getElementById('profile-budget-val').textContent = b;
+}
+['p-weight','p-age','p-sex','p-activity'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', updateBudgetPreview);
+});
+
+window.saveProfile = async () => {
+  const w = parseFloat(document.getElementById('p-weight').value) || 0;
+  const age = parseInt(document.getElementById('p-age').value) || 30;
+  const sex = document.getElementById('p-sex').value;
+  const act = document.getElementById('p-activity').value;
+  profile = {
+    weight: w,
+    goal: parseFloat(document.getElementById('p-goal').value) || 0,
+    age, sex, activity: act,
+    budget: calcBudget(w, age, sex, act),
+  };
+  await saveProfileDb();
+  toast('✅ Profil sauvegardé !');
+  updateHeader();
+};
+
+// ── NAVIGATION ──
+window.showPage = (page) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+  document.getElementById('nav-' + page)?.classList.add('active');
+  if (page === 'journal') renderJournal();
+  if (page === 'biblio') renderLibrary();
+};
+
+</script>
+</body>
+</html>

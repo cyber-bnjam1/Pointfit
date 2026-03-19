@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#FF6B35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PointFit">
+  <title>PointFit</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SPLASH
+     ══════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-logo">PointFit 🎯</div>
+  <div class="splash-sub">Ton coach nutrition personnel</div>
+  <div class="splash-spin"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ÉCRAN D'AUTHENTIFICATION
+     ══════════════════════════════════════ -->
+<div id="auth-screen" class="hidden">
+  <div class="auth-logo">PointFit 🎯</div>
+  <div class="auth-card">
+    <div class="auth-title" id="auth-title">Connexion</div>
+    <div class="auth-error" id="auth-error"></div>
+
+    <input class="auth-input" type="email"    id="auth-email"    placeholder="Email">
+    <input class="auth-input" type="password" id="auth-password" placeholder="Mot de passe">
+    <input class="auth-input" type="text"     id="auth-name"     placeholder="Prénom" style="display:none">
+
+    <button class="btn-primary" id="auth-btn">Se connecter</button>
+
+    <div class="auth-divider">ou</div>
+    <button class="btn-demo" id="demo-btn">🎮 Essayer en mode démo</button>
+
+    <div class="auth-switch" id="auth-switch">
+      Pas de compte ? <span>S'inscrire</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APPLICATION PRINCIPALE
+     ══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Bannière mode démo -->
+  <div id="demo-banner-app">
+    🎮 Mode démo — données non sauvegardées en ligne
+  </div>
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">PointFit 🎯</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+      <button class="btn-icon" onclick="showPage('profil')">👤</button>
+    </div>
+
+    <!-- Anneau de points restants -->
+    <div class="points-ring-wrap">
+      <div class="ring-container">
+        <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+          <circle class="ring-bg"   cx="65" cy="65" r="54"/>
+          <circle class="ring-fill" id="ring-fill" cx="65" cy="65" r="54"
+                  stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-pts"   id="ring-remaining">--</div>
+          <div class="ring-label">restants</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini statistiques -->
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-used">0</div>
+        <div class="mini-stat-lbl">Utilisés</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-budget">--</div>
+        <div class="mini-stat-lbl">Budget</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-val" id="stat-weekly">35</div>
+        <div class="mini-stat-lbl">Bonus semaine</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── ZONE DE PAGES ── -->
+  <div class="pages">
+
+    <!-- ── PAGE : JOURNAL ── -->
+    <div class="page active" id="page-journal">
+      <div class="card">
+        <div class="card-title section-day-nav">
+          <button class="day-nav-btn" onclick="changeDay(-1)">‹</button>
+          <span id="journal-day-label">Aujourd'hui</span>
+          <button class="day-nav-btn" onclick="changeDay(1)">›</button>
+        </div>
+        <div id="journal-content"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎁 Points bonus hebdomadaires</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:0.85rem;color:var(--text2);font-weight:600">Utilisés cette semaine</span>
+          <span id="weekly-used-label" style="font-weight:800;color:var(--purple)">0 / 35</span>
+        </div>
+        <div class="weekly-bar">
+          <div class="weekly-fill" id="weekly-bar-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE : CALCULATEUR ── -->
+    <div class="page" id="page-calc">
+
+      <!-- Recherche dans la BDD aliments -->
+      <div class="card">
+        <div class="card-title">🔍 Rechercher un aliment</div>
+        <input class="foods-db-search" id="foods-db-search"
+               placeholder="Poulet, riz, yaourt…" oninput="searchFoodsDB()">
+        <div id="foods-db-results"></div>
+      </div>
+
+      <!-- Saisie manuelle -->
+      <div class="card">
+        <div class="card-title">🔢 Saisie manuelle</div>
+        <div class="calc-grid">
+          <div class="calc-field">
+            <label class="calc-label">Calories (kcal)</label>
+            <input class="calc-input" type="number" id="c-cal"    placeholder="0"   min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Protéines (g)</label>
+            <input class="calc-input" type="number" id="c-prot"   placeholder="0"   min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Graisses sat. (g)</label>
+            <input class="calc-input" type="number" id="c-sat"    placeholder="0"   min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Sucres (g)</label>
+            <input class="calc-input" type="number" id="c-sugar"  placeholder="0"   min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Fibres (g)</label>
+            <input class="calc-input" type="number" id="c-fiber"  placeholder="0"   min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-label">Portion (g)</label>
+            <input class="calc-input" type="number" id="c-portion" placeholder="100" min="0" oninput="calcPoints()">
+          </div>
+          <div class="calc-field" style="grid-column:1/-1">
+            <label class="calc-label">Nom de l'aliment</label>
+            <input class="calc-input" type="text" id="c-name" placeholder="ex: Yaourt nature">
+          </div>
+        </div>
+
+        <!-- Résultat -->
+        <div class="calc-result" style="margin-top:12px">
+          <div>
+            <div class="calc-result-pts"   id="calc-pts">0</div>
+            <div class="calc-result-label" id="calc-pts-label">points</div>
+          </div>
+          <div id="calc-zero-badge"></div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-add" onclick="openAddModal()"   style="flex:1">➕ Ajouter au journal</button>
+          <button class="btn-add" onclick="saveToLibrary()"  style="flex:0.6">💾 Bibliothèque</button>
+        </div>
+      </div>
+
+      <!-- Explication formule -->
+      <div class="card">
+        <div class="card-title">ℹ️ Comment ça marche ?</div>
+        <p style="font-size:0.82rem;color:var(--text2);line-height:1.6">
+          La formule est inspirée du système WW SmartPoints :<br><br>
+          <strong>Pts = (Cal × 0.0305) + (Sat. × 0.275) + (Sucres × 0.12) − (Prot. × 0.098) − (Fibres × 0.07)</strong><br><br>
+          Un résultat ≤ 0 donne <strong style="color:var(--green)">0 point</strong> (aliment ZeroPoint 🟢).
+        </p>
+      </div>
+    </div>
+
+    <!-- ── PAGE : BIBLIOTHÈQUE ── -->
+    <div class="page" id="page-biblio">
+      <div class="card">
+        <div class="card-title">📚 Mes aliments</div>
+        <input class="lib-search" id="lib-search"
+               placeholder="🔍 Rechercher dans ma bibliothèque…" oninput="renderLibrary()">
+      </div>
+      <div class="card">
+        <div id="library-list"></div>
+        <div id="library-empty" style="text-align:center;color:var(--text2);padding:20px;display:none">
+          <div style="font-size:2rem">📭</div>
+          <div style="font-size:0.9rem;margin-top:8px">
+            Aucun aliment sauvegardé.<br>Calcule un aliment et enregistre-le !
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE : POIDS ── -->
+    <div class="page" id="page-poids">
+      <div class="card">
+        <div class="card-title">⚖️ Enregistrer mon poids</div>
+        <div class="weight-form">
+          <input class="weight-input" type="number" id="weight-input"
+                 placeholder="Ex : 72.5" step="0.1" min="30" max="300">
+          <button class="btn-round" onclick="addWeight()">Ajouter</button>
+        </div>
+      </div>
+
+      <div class="card" id="weight-stats-card" style="display:none">
+        <div class="card-title">📊 Statistiques</div>
+        <div class="weight-stats">
+          <div class="w-stat"><div class="w-stat-val" id="ws-start">--</div><div class="w-stat-lbl">Début</div></div>
+          <div class="w-stat"><div class="w-stat-val" id="ws-current">--</div><div class="w-stat-lbl">Actuel</div></div>
+          <div class="w-stat"><div class="w-stat-val" id="ws-diff">--</div><div class="w-stat-lbl">Évolution</div></div>
+        </div>
+        <svg class="weight-chart" id="weight-svg"
+             viewBox="0 0 300 100" preserveAspectRatio="none"
+             style="margin-top:12px"></svg>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📅 Historique</div>
+        <div id="weight-history"></div>
+        <div id="weight-empty" style="text-align:center;color:var(--text2);padding:20px">
+          <div style="font-size:2rem">⚖️</div>
+          <div style="font-size:0.9rem;margin-top:8px">Aucune mesure enregistrée</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE : PROFIL ── -->
+    <div class="page" id="page-profil">
+      <div class="card">
+        <div class="avatar-row">
+          <div class="avatar" id="profile-avatar">😊</div>
+          <div class="avatar-info">
+            <div class="avatar-name"  id="profile-display-name">Mon profil</div>
+            <div class="avatar-email" id="profile-display-email"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Mon profil</div>
+        <div class="profile-form">
+          <div class="profile-grid">
+            <div class="profile-field">
+              <label class="profile-label">Poids actuel (kg)</label>
+              <input class="profile-input" type="number" id="p-weight" placeholder="70" step="0.1">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Objectif (kg)</label>
+              <input class="profile-input" type="number" id="p-goal"   placeholder="65" step="0.1">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Âge</label>
+              <input class="profile-input" type="number" id="p-age"    placeholder="30">
+            </div>
+            <div class="profile-field">
+              <label class="profile-label">Sexe</label>
+              <select class="profile-select" id="p-sex">
+                <option value="f">Femme</option>
+                <option value="m">Homme</option>
+              </select>
+            </div>
+          </div>
+          <div class="profile-field">
+            <label class="profile-label">Activité physique</label>
+            <select class="profile-select" id="p-activity">
+              <option value="1">Sédentaire</option>
+              <option value="2">Légèrement actif(ve)</option>
+              <option value="3">Modérément actif(ve)</option>
+              <option value="4">Très actif(ve)</option>
+            </select>
+          </div>
+          <div class="profile-budget-box">
+            <div class="profile-budget-val" id="profile-budget-val">--</div>
+            <div class="profile-budget-lbl">points / jour calculés</div>
+          </div>
+          <button class="btn-primary" onclick="saveProfile()">💾 Sauvegarder</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚪 Compte</div>
+        <button class="btn-danger" onclick="signOut()">Se déconnecter</button>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- ── NAVIGATION BAS ── -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-journal" onclick="showPage('journal')">
+      <span class="nav-icon">📓</span>
+      <span class="nav-label">Journal</span>
+    </button>
+    <button class="nav-btn" id="nav-calc" onclick="showPage('calc')">
+      <span class="nav-icon">🔢</span>
+      <span class="nav-label">Calculer</span>
+    </button>
+    <button class="nav-btn" id="nav-biblio" onclick="showPage('biblio')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Aliments</span>
+    </button>
+    <button class="nav-btn" id="nav-poids" onclick="showPage('poids')">
+      <span class="nav-icon">⚖️</span>
+      <span class="nav-label">Poids</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════
+     MODAL — AJOUTER AU JOURNAL
+     ══════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Ajouter au journal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <p style="margin-bottom:10px;font-size:0.85rem;color:var(--text2);font-weight:600">Repas :</p>
+    <div class="meal-chips">
+      <button class="meal-chip selected" onclick="selectMeal('petit-dejeuner',this)">🌅 Petit-déj.</button>
+      <button class="meal-chip"          onclick="selectMeal('dejeuner',this)">🌞 Déjeuner</button>
+      <button class="meal-chip"          onclick="selectMeal('diner',this)">🌙 Dîner</button>
+      <button class="meal-chip"          onclick="selectMeal('collation',this)">🍎 Collation</button>
+    </div>
+
+    <p style="margin-bottom:10px;font-size:0.85rem;color:var(--text2);font-weight:600">Quantité (g) :</p>
+    <input class="calc-input" type="number" id="modal-qty"
+           placeholder="100" value="100" min="1"
+           style="width:100%;margin-bottom:14px" oninput="updateModalPts()">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:16px;background:var(--bg);padding:12px;border-radius:12px">
+      <span style="font-weight:700">Points calculés :</span>
+      <span class="pts-chip" id="modal-pts-display">0 pts</span>
+    </div>
+
+    <button class="btn-primary" onclick="confirmAddToJournal()">✅ Ajouter</button>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     SCRIPTS
+     Ordre important : foods.js en premier (données),
+     puis app.js (logique, type module pour Firebase ESM)
+     ══════════════════════════════════════ -->
+<script src="foods.js"></script>
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
