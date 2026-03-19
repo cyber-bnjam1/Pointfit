@@ -148,12 +148,13 @@ function toggleAuthMode() {
 window.toggleAuthMode = toggleAuthMode;
 
 function doAuth() {
-  if (!FIREBASE_OK || !fbAuth) { toast('Configure Firebase pour te connecter'); return; }
+  if (!fbAuth) { toast('Erreur Firebase — réessaie'); return; }
   var email = el('auth-email').value.trim();
   var pwd   = el('auth-password').value;
   var name  = el('auth-name').value.trim();
   var errEl = el('auth-error');
   errEl.classList.remove('show');
+  if (!email || !pwd) { errEl.textContent = 'Remplis email et mot de passe.'; errEl.classList.add('show'); return; }
   var p = authMode==='register'
     ? fbAuth.createUserWithEmailAndPassword(email, pwd)
     : fbAuth.signInWithEmailAndPassword(email, pwd);
@@ -168,7 +169,7 @@ function doAuth() {
       'auth/user-not-found':       'Aucun compte avec cet email.',
       'auth/invalid-credential':   'Email ou mot de passe incorrect.',
     };
-    errEl.textContent = msgs[e.code] || e.message;
+    errEl.textContent = msgs[e.code] || ('Erreur : ' + e.message);
     errEl.classList.add('show');
   });
 }
@@ -578,17 +579,21 @@ window.showPage = function(page) {
 
 // ══ INIT ══════════════════════════════════════
 (function init() {
-  // Firebase — guard contre double init
-  if (FIREBASE_OK) {
-    try {
-      var existingApps = firebase.apps;
-      var fbAppInst = existingApps.length ? existingApps[0] : firebase.initializeApp(FIREBASE_CONFIG);
-      fbAuth = firebase.auth(fbAppInst);
-      fbDb   = firebase.firestore(fbAppInst);
-      fbAuth.onAuthStateChanged(function(user) {
-        if (user) { currentUser=user; showAppScreen(); setupHeader(); subscribeData(); }
-        else if (!isDemoMode) { showAuthScreen(); }
-      });
-    } catch(e) { console.warn('Firebase:', e); showAuthScreen(); }
+  // Firebase est déjà initialisé dans le HTML — on récupère les références
+  fbAuth = window.FB_AUTH;
+  fbDb   = window.FB_DB;
+
+  if (fbAuth) {
+    fbAuth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        showAppScreen();
+        setupHeader();
+        subscribeData();
+      } else if (!isDemoMode) {
+        showAuthScreen();
+      }
+    });
   }
+  // Sans Firebase : le timer HTML (1.5s) a déjà affiché l'auth
 })();
