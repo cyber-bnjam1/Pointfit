@@ -1,17 +1,11 @@
-// PointFit — app.js (script classique, pas de module ES)
+// PointFit — app.js
 
-// ══ CONFIG FIREBASE ══════════════════════════
-// Remplace ces valeurs par ta config Firebase
-var FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyCFx3-cERR6ULys4uv1y86UeJQvCfp3_60",
-  authDomain:        "pointfit0101.firebaseapp.com",
-  projectId:         "pointfit0101",
-  storageBucket:     "pointfit0101.firebasestorage.app",
-  messagingSenderId: "668989116691",
-  appId:             "1:668989116691:web:22481a36e8fa5a7289cae6"
-};
-var FIREBASE_OK = true;
-var fbApp = null, fbAuth = null, fbDb = null;
+// ── Raccourci getElementById ──────────────────
+function el(id) { return document.getElementById(id); }
+
+// ── Getters Firebase (toujours frais depuis window) ──
+function fbAuth() { return window.FB_AUTH; }
+function fbDb()   { return window.FB_DB;   }
 
 // ══ STATE ════════════════════════════════════
 var currentUser   = null;
@@ -39,10 +33,10 @@ function formatDate(s) {
   return p[2]+'/'+p[1]+'/'+p[0];
 }
 function toast(msg) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(function(){ el.classList.remove('show'); }, 2200);
+  var t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2400);
 }
 function calcPts(cal, prot, sat, sugar, fiber) {
   cal=+cal||0; prot=+prot||0; sat=+sat||0; sugar=+sugar||0; fiber=+fiber||0;
@@ -56,27 +50,24 @@ function calcBudget(weight, age, sex, activity) {
   return Math.max(18, Math.min(45, base));
 }
 function hideSplash() {
-  var s = document.getElementById('splash');
-  s.classList.add('hide');
-  s.style.display = 'none';
+  var s = el('splash');
+  if (s) { s.style.display='none'; s.classList.add('hide'); }
 }
 function showAuthScreen() {
   hideSplash();
-  document.getElementById('auth-screen').classList.remove('hidden');
+  el('auth-screen').classList.remove('hidden');
 }
 function showAppScreen() {
   hideSplash();
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('app').classList.add('visible');
+  el('auth-screen').classList.add('hidden');
+  el('app').classList.add('visible');
 }
-function el(id) { return document.getElementById(id); }
 
 // ══ DÉMO ═════════════════════════════════════
 function launchDemo() {
   isDemoMode  = true;
   currentUser = { uid:'demo', displayName:'Utilisateur Démo', email:'demo@pointfit.app' };
   profile     = { budget:26, weight:78, goal:70, age:32, sex:'m', activity:'2' };
-
   var t = todayStr(0), y = todayStr(-1);
   journal = {};
   journal[t] = { meals: {
@@ -85,9 +76,9 @@ function launchDemo() {
       { name:"Banane",           cal:89,  prot:1.1, sat:0.1, sugar:12, fiber:2.6, qty:100, pts:0 }
     ],
     'dejeuner': [
-      { name:"Blanc de poulet",  cal:165, prot:31,  sat:1,   sugar:0,  fiber:0,   qty:150, pts:calcPts(248,46.5,1.5,0,0) },
-      { name:"Riz blanc cuit",   cal:130, prot:2.7, sat:0.1, sugar:0,  fiber:0.4, qty:150, pts:calcPts(195,4,0.15,0,0.6) },
-      { name:"Salade verte",     cal:15,  prot:1.3, sat:0,   sugar:1,  fiber:1.5, qty:80,  pts:0 }
+      { name:"Blanc de poulet", cal:165, prot:31,  sat:1,   sugar:0, fiber:0,   qty:150, pts:calcPts(248,46.5,1.5,0,0) },
+      { name:"Riz blanc cuit",  cal:130, prot:2.7, sat:0.1, sugar:0, fiber:0.4, qty:150, pts:calcPts(195,4,0.15,0,0.6) },
+      { name:"Salade verte",    cal:15,  prot:1.3, sat:0,   sugar:1, fiber:1.5, qty:80,  pts:0 }
     ],
     'collation': [
       { name:"Yaourt nature 0%", cal:56, prot:8, sat:0.1, sugar:6, fiber:0, qty:125, pts:calcPts(70,10,0.1,7.5,0) }
@@ -103,25 +94,22 @@ function launchDemo() {
     'diner': [{ name:"Omelette 2 œufs", cal:148, prot:12, sat:2.8, sugar:0.4, fiber:0, qty:110, pts:calcPts(163,13.2,3.1,0.44,0) }],
     'collation': []
   }};
-
   library = [];
   if (typeof FOODS_DB !== 'undefined') {
-    library = FOODS_DB.slice(0, 12).map(function(f, i) {
+    library = FOODS_DB.slice(0,12).map(function(f,i){
       return { id:'demo_'+i, name:f.name, emoji:f.emoji, cal:f.cal, prot:f.prot,
                sat:f.sat, sugar:f.sugar, fiber:f.fiber, portion:f.portion,
                pts:calcPts(f.cal,f.prot,f.sat,f.sugar,f.fiber) };
     });
   }
-
   weights = [];
   var base = new Date(); base.setDate(base.getDate()-30);
   [80.2,79.8,79.5,79.6,79.1,78.9,78.7,79.0,78.5,78.3,78.0,78.2,
    77.8,77.6,77.9,77.4,77.2,77.5,77.0,76.8,77.1,76.6,76.4,76.7,
-   76.2,76.0,76.3,75.9,75.7,78.0].forEach(function(v, i) {
+   76.2,76.0,76.3,75.9,75.7,78.0].forEach(function(v,i){
     var d = new Date(base); d.setDate(d.getDate()+i);
     weights.push({ id:'w'+i, date:d.toISOString().split('T')[0], value:v, ts:d.getTime() });
   });
-
   el('demo-banner-app').style.display = 'block';
   showAppScreen();
   setupHeader();
@@ -137,9 +125,9 @@ window.launchDemo = launchDemo;
 // ══ AUTH ══════════════════════════════════════
 function toggleAuthMode() {
   authMode = authMode==='login' ? 'register' : 'login';
-  el('auth-title').textContent = authMode==='login' ? 'Connexion' : 'Inscription';
-  el('auth-btn').textContent   = authMode==='login' ? 'Se connecter' : 'Créer mon compte';
-  el('auth-switch').innerHTML  = authMode==='login'
+  el('auth-title').textContent  = authMode==='login' ? 'Connexion' : 'Inscription';
+  el('auth-btn').textContent    = authMode==='login' ? 'Se connecter' : 'Créer mon compte';
+  el('auth-switch').innerHTML   = authMode==='login'
     ? "Pas de compte ? <span>S'inscrire</span>"
     : "Déjà un compte ? <span>Se connecter</span>";
   el('auth-name').style.display = authMode==='register' ? 'block' : 'none';
@@ -148,26 +136,40 @@ function toggleAuthMode() {
 window.toggleAuthMode = toggleAuthMode;
 
 function doAuth() {
-  if (!fbAuth) { toast('Erreur Firebase — réessaie'); return; }
+  // Utilise window.FB_AUTH directement — toujours à jour
+  var auth = window.FB_AUTH;
+  if (!auth) {
+    el('auth-error').textContent = 'Service non disponible, réessaie dans quelques secondes.';
+    el('auth-error').classList.add('show');
+    return;
+  }
   var email = el('auth-email').value.trim();
   var pwd   = el('auth-password').value;
   var name  = el('auth-name').value.trim();
   var errEl = el('auth-error');
   errEl.classList.remove('show');
-  if (!email || !pwd) { errEl.textContent = 'Remplis email et mot de passe.'; errEl.classList.add('show'); return; }
-  var p = authMode==='register'
-    ? fbAuth.createUserWithEmailAndPassword(email, pwd)
-    : fbAuth.signInWithEmailAndPassword(email, pwd);
-  p.then(function(cred) {
-    if (authMode==='register' && name) return cred.user.updateProfile({displayName:name});
+  if (!email || !pwd) {
+    errEl.textContent = 'Remplis ton email et ton mot de passe.';
+    errEl.classList.add('show');
+    return;
+  }
+  var promise = authMode === 'register'
+    ? auth.createUserWithEmailAndPassword(email, pwd)
+    : auth.signInWithEmailAndPassword(email, pwd);
+  promise.then(function(cred) {
+    if (authMode === 'register' && name) {
+      return cred.user.updateProfile({ displayName: name });
+    }
   }).catch(function(e) {
     var msgs = {
       'auth/email-already-in-use': 'Email déjà utilisé.',
-      'auth/invalid-email':        'Email invalide.',
-      'auth/weak-password':        'Mot de passe trop court (6 min).',
+      'auth/invalid-email':        'Adresse email invalide.',
+      'auth/weak-password':        'Mot de passe trop court (6 caractères min).',
       'auth/wrong-password':       'Mot de passe incorrect.',
       'auth/user-not-found':       'Aucun compte avec cet email.',
       'auth/invalid-credential':   'Email ou mot de passe incorrect.',
+      'auth/too-many-requests':    'Trop de tentatives, réessaie plus tard.',
+      'auth/network-request-failed': 'Erreur réseau, vérifie ta connexion.',
     };
     errEl.textContent = msgs[e.code] || ('Erreur : ' + e.message);
     errEl.classList.add('show');
@@ -180,45 +182,57 @@ window.signOut = function() {
     isDemoMode=false; currentUser=null; journal={}; library=[]; weights=[]; journalOffset=0;
     el('demo-banner-app').style.display = 'none';
     el('app').classList.remove('visible');
-    showAuthScreen(); return;
+    showAuthScreen();
+    return;
   }
-  if (unsubProfile) unsubProfile();
-  if (unsubLibrary) unsubLibrary();
-  if (unsubWeights) unsubWeights();
-  if (fbAuth) fbAuth.signOut();
+  if (unsubProfile) { unsubProfile(); unsubProfile=null; }
+  if (unsubLibrary) { unsubLibrary(); unsubLibrary=null; }
+  if (unsubWeights) { unsubWeights(); unsubWeights=null; }
+  var auth = window.FB_AUTH;
+  if (auth) auth.signOut();
 };
 
 // ══ FIRESTORE ═════════════════════════════════
 function subscribeData() {
   var uid = currentUser.uid;
-  unsubProfile = fbDb.doc('users/'+uid+'/data/profile').onSnapshot(function(snap) {
-    if (snap.exists) { profile = Object.assign({}, profile, snap.data()); loadProfileUI(); updateHeader(); }
+  var db  = window.FB_DB;
+  if (!db) return;
+  unsubProfile = db.doc('users/'+uid+'/data/profile').onSnapshot(function(snap) {
+    if (snap.exists) {
+      profile = Object.assign({}, profile, snap.data());
+      loadProfileUI();
+      updateHeader();
+    }
   });
-  unsubLibrary = fbDb.collection('users/'+uid+'/library').onSnapshot(function(snap) {
+  unsubLibrary = db.collection('users/'+uid+'/library').onSnapshot(function(snap) {
     library = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     renderLibrary();
   });
   loadJournalDay(todayStr(0));
-  unsubWeights = fbDb.collection('users/'+uid+'/weights').orderBy('date','asc').onSnapshot(function(snap) {
+  unsubWeights = db.collection('users/'+uid+'/weights').orderBy('date','asc').onSnapshot(function(snap) {
     weights = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     renderWeights();
   });
 }
 function loadJournalDay(dateStr) {
   if (journal[dateStr] !== undefined) { renderJournal(); updateHeader(); return; }
-  if (isDemoMode || !fbDb) { journal[dateStr]={meals:{}}; renderJournal(); updateHeader(); return; }
-  fbDb.doc('users/'+currentUser.uid+'/journal/'+dateStr).get().then(function(snap) {
+  var db = window.FB_DB;
+  if (isDemoMode || !db) { journal[dateStr]={meals:{}}; renderJournal(); updateHeader(); return; }
+  db.doc('users/'+currentUser.uid+'/journal/'+dateStr).get().then(function(snap) {
     journal[dateStr] = snap.exists ? snap.data() : {meals:{}};
-    renderJournal(); updateHeader();
+    renderJournal();
+    updateHeader();
   });
 }
 function saveJournalDay(dateStr) {
-  if (isDemoMode || !fbDb) return;
-  fbDb.doc('users/'+currentUser.uid+'/journal/'+dateStr).set(journal[dateStr]);
+  var db = window.FB_DB;
+  if (isDemoMode || !db) return;
+  db.doc('users/'+currentUser.uid+'/journal/'+dateStr).set(journal[dateStr]);
 }
 function saveProfileDb() {
-  if (isDemoMode || !fbDb) return;
-  fbDb.doc('users/'+currentUser.uid+'/data/profile').set(profile);
+  var db = window.FB_DB;
+  if (isDemoMode || !db) return;
+  db.doc('users/'+currentUser.uid+'/data/profile').set(profile);
 }
 
 // ══ HEADER ════════════════════════════════════
@@ -232,6 +246,7 @@ function setupHeader() {
   el('profile-display-email').textContent = currentUser.email || '';
   if (currentUser.displayName) el('profile-avatar').textContent = currentUser.displayName[0].toUpperCase();
 }
+
 function updateHeader() {
   var dateStr = todayStr(0);
   var dayData = journal[dateStr];
@@ -253,6 +268,7 @@ function updateHeader() {
   el('weekly-used-label').textContent = wUsed+' / 35';
   el('weekly-bar-fill').style.width   = Math.min(100,(wUsed/35)*100)+'%';
 }
+
 function getWeeklyExcess() {
   var now = new Date(), day = now.getDay()===0 ? 6 : now.getDay()-1;
   var total = 0;
@@ -267,37 +283,48 @@ function getWeeklyExcess() {
 }
 
 // ══ JOURNAL ═══════════════════════════════════
-var MEAL_LABELS = { 'petit-dejeuner':'🌅 Petit-déjeuner', 'dejeuner':'🌞 Déjeuner', 'diner':'🌙 Dîner', 'collation':'🍎 Collation' };
-var MEAL_ORDER  = ['petit-dejeuner','dejeuner','collation','diner'];
+var MEAL_LABELS = {
+  'petit-dejeuner':'🌅 Petit-déjeuner',
+  'dejeuner':'🌞 Déjeuner',
+  'diner':'🌙 Dîner',
+  'collation':'🍎 Collation'
+};
+var MEAL_ORDER = ['petit-dejeuner','dejeuner','collation','diner'];
 
 window.changeDay = function(dir) {
   journalOffset = Math.min(0, journalOffset+dir);
   var dateStr = todayStr(journalOffset);
   loadJournalDay(dateStr);
-  el('journal-day-label').textContent = journalOffset===0 ? "Aujourd'hui" : journalOffset===-1 ? "Hier" : formatDate(dateStr);
+  el('journal-day-label').textContent =
+    journalOffset===0 ? "Aujourd'hui" : journalOffset===-1 ? "Hier" : formatDate(dateStr);
 };
 
 function renderJournal() {
   var dateStr = todayStr(journalOffset);
-  var dayData = (journal[dateStr] && journal[dateStr].meals) ? journal[dateStr] : {meals:{}};
+  var dayData = journal[dateStr] || {meals:{}};
   var cont = el('journal-content');
-  var html = '', total = 0;
+  var html='', total=0;
   MEAL_ORDER.forEach(function(meal) {
-    var items = dayData.meals[meal] || [];
+    var items = (dayData.meals && dayData.meals[meal]) ? dayData.meals[meal] : [];
     var mPts  = items.reduce(function(s,i){ return s+(i.pts||0); }, 0);
     total += mPts;
     html += '<div class="meal-section">'
-      + '<div class="meal-header"><span class="meal-name">'+MEAL_LABELS[meal]+'</span><span class="meal-pts">'+mPts+' pts</span></div>';
-    if (!items.length) html += '<div style="color:var(--text2);font-size:.8rem;padding:3px 0 8px;font-style:italic">Rien ajouté</div>';
+      +'<div class="meal-header">'
+      +'<span class="meal-name">'+MEAL_LABELS[meal]+'</span>'
+      +'<span class="meal-pts">'+mPts+' pts</span>'
+      +'</div>';
+    if (!items.length) {
+      html += '<div style="color:var(--text2);font-size:.8rem;padding:3px 0 8px;font-style:italic">Rien ajouté</div>';
+    }
     items.forEach(function(item, idx) {
       html += '<div class="food-item">'
-        + '<div class="food-item-info">'
-        + '<div class="food-item-name">'+item.name+'</div>'
-        + '<div class="food-item-detail">'+(item.qty||100)+'g · '+(item.cal||0)+' kcal · P:'+(item.prot||0)+'g</div>'
-        + '</div>'
-        + '<span class="food-item-pts'+(item.pts===0?' zero':'')+'">'+(item.pts===0?'🟢 0':item.pts)+' pts</span>'
-        + '<button class="food-item-del" onclick="deleteJournalItem(\''+meal+'\','+idx+')">🗑</button>'
-        + '</div>';
+        +'<div class="food-item-info">'
+        +'<div class="food-item-name">'+item.name+'</div>'
+        +'<div class="food-item-detail">'+(item.qty||100)+'g · '+(item.cal||0)+' kcal · P:'+(item.prot||0)+'g</div>'
+        +'</div>'
+        +'<span class="food-item-pts'+(item.pts===0?' zero':'')+'">'+( item.pts===0?'🟢 0':item.pts)+' pts</span>'
+        +'<button class="food-item-del" onclick="deleteJournalItem(\''+meal+'\','+idx+')">🗑</button>'
+        +'</div>';
     });
     html += '</div>';
   });
@@ -310,8 +337,11 @@ function renderJournal() {
 window.deleteJournalItem = function(meal, idx) {
   var dateStr = todayStr(journalOffset);
   if (!journal[dateStr] || !journal[dateStr].meals[meal]) return;
-  journal[dateStr].meals[meal].splice(idx, 1);
-  renderJournal(); saveJournalDay(dateStr); updateHeader(); toast('Aliment supprimé');
+  journal[dateStr].meals[meal].splice(idx,1);
+  renderJournal();
+  saveJournalDay(dateStr);
+  updateHeader();
+  toast('Aliment supprimé');
 };
 
 // ══ CALCULATEUR ═══════════════════════════════
@@ -325,56 +355,64 @@ window.calcPoints = function() {
   var f = portion/100;
   var pts = calcPts(cal*f, prot*f, sat*f, sugar*f, fiber*f);
   el('calc-pts').textContent       = pts;
-  el('calc-pts-label').textContent = pts===1?'point':'points';
-  el('calc-zero-badge').innerHTML  = pts===0?'<span class="zero-badge">🟢 ZeroPoint</span>':'';
+  el('calc-pts-label').textContent = pts===1 ? 'point' : 'points';
+  el('calc-zero-badge').innerHTML  = pts===0 ? '<span class="zero-badge">🟢 ZeroPoint</span>' : '';
 };
 
 window.searchFoodsDB = function() {
   var q = (el('foods-db-search').value||'').toLowerCase().trim();
   var results = el('foods-db-results');
   if (!q || q.length<2 || typeof FOODS_DB==='undefined') { results.innerHTML=''; return; }
-  var matches = FOODS_DB.filter(function(f){ return f.name.toLowerCase().indexOf(q)!==-1 || f.cat.toLowerCase().indexOf(q)!==-1; }).slice(0,10);
-  if (!matches.length) { results.innerHTML='<div style="color:var(--text2);font-size:.85rem;padding:8px">Aucun résultat</div>'; return; }
+  var matches = FOODS_DB.filter(function(f){
+    return f.name.toLowerCase().indexOf(q)!==-1 || f.cat.toLowerCase().indexOf(q)!==-1;
+  }).slice(0,10);
+  if (!matches.length) {
+    results.innerHTML = '<div style="color:var(--text2);font-size:.85rem;padding:8px">Aucun résultat pour "'+q+'"</div>';
+    return;
+  }
   results.innerHTML = matches.map(function(f) {
-    var idx = FOODS_DB.indexOf(f), pts = calcPts(f.cal,f.prot,f.sat,f.sugar,f.fiber);
+    var idx = FOODS_DB.indexOf(f);
+    var pts = calcPts(f.cal,f.prot,f.sat,f.sugar,f.fiber);
     return '<div class="food-db-item" onclick="loadFoodFromDB('+idx+')">'
       +'<div class="food-db-emoji">'+f.emoji+'</div>'
-      +'<div class="food-db-info"><div class="food-db-name">'+f.name+'</div><div class="food-db-meta">'+f.cal+' kcal · P:'+f.prot+'g · '+f.portion+'g</div></div>'
+      +'<div class="food-db-info"><div class="food-db-name">'+f.name+'</div>'
+      +'<div class="food-db-meta">'+f.cal+' kcal · P:'+f.prot+'g · '+f.portion+'g</div></div>'
       +'<div class="food-db-pts'+(pts===0?' zero':'')+'">'+( pts===0?'🟢 0':pts)+' pts</div>'
       +'</div>';
   }).join('');
 };
 
 window.loadFoodFromDB = function(idx) {
-  var f = FOODS_DB[idx]; if (!f) return;
-  el('c-name').value    = f.name;
-  el('c-cal').value     = f.cal;
-  el('c-prot').value    = f.prot;
-  el('c-sat').value     = f.sat;
-  el('c-sugar').value   = f.sugar;
-  el('c-fiber').value   = f.fiber;
-  el('c-portion').value = f.portion;
-  el('foods-db-search').value  = '';
-  el('foods-db-results').innerHTML = '';
+  var f = FOODS_DB[idx]; if(!f) return;
+  el('c-name').value=f.name; el('c-cal').value=f.cal; el('c-prot').value=f.prot;
+  el('c-sat').value=f.sat;   el('c-sugar').value=f.sugar; el('c-fiber').value=f.fiber;
+  el('c-portion').value=f.portion;
+  el('foods-db-search').value='';
+  el('foods-db-results').innerHTML='';
   window.calcPoints();
   toast('📋 '+f.name+' chargé');
 };
 
 window.openAddModal = function() {
-  var cal = parseFloat(el('c-cal').value)||0, name = el('c-name').value;
+  var cal=parseFloat(el('c-cal').value)||0, name=el('c-name').value;
   if (!cal && !name) { toast('Remplis au moins les calories'); return; }
-  modalCalcData = { name:name||'Aliment',
-    cal:parseFloat(el('c-cal').value)||0, prot:parseFloat(el('c-prot').value)||0,
-    sat:parseFloat(el('c-sat').value)||0, sugar:parseFloat(el('c-sugar').value)||0,
-    fiber:parseFloat(el('c-fiber').value)||0, basePortion:parseFloat(el('c-portion').value)||100 };
+  modalCalcData = {
+    name: name||'Aliment',
+    cal:     parseFloat(el('c-cal').value)||0,
+    prot:    parseFloat(el('c-prot').value)||0,
+    sat:     parseFloat(el('c-sat').value)||0,
+    sugar:   parseFloat(el('c-sugar').value)||0,
+    fiber:   parseFloat(el('c-fiber').value)||0,
+    basePortion: parseFloat(el('c-portion').value)||100
+  };
   el('modal-qty').value = modalCalcData.basePortion;
   window.updateModalPts();
   el('add-modal').classList.remove('hidden');
 };
-window.closeModal = function() { el('add-modal').classList.add('hidden'); };
+window.closeModal    = function() { el('add-modal').classList.add('hidden'); };
 window.updateModalPts = function() {
-  var qty = parseFloat(el('modal-qty').value)||100, f=qty/100;
-  var pts = calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
+  var qty=parseFloat(el('modal-qty').value)||100, f=qty/100;
+  var pts=calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
   el('modal-pts-display').textContent = pts+' pts';
 };
 window.selectMeal = function(meal, btn) {
@@ -383,25 +421,32 @@ window.selectMeal = function(meal, btn) {
   btn.classList.add('selected');
 };
 window.confirmAddToJournal = function() {
-  var qty = parseFloat(el('modal-qty').value)||100, f=qty/100;
-  var pts = calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
-  var dateStr = todayStr(journalOffset);
+  var qty=parseFloat(el('modal-qty').value)||100, f=qty/100;
+  var pts=calcPts(modalCalcData.cal*f, modalCalcData.prot*f, modalCalcData.sat*f, modalCalcData.sugar*f, modalCalcData.fiber*f);
+  var dateStr=todayStr(journalOffset);
   if (!journal[dateStr]) journal[dateStr]={meals:{}};
   if (!journal[dateStr].meals[currentMeal]) journal[dateStr].meals[currentMeal]=[];
   journal[dateStr].meals[currentMeal].push({
-    name:modalCalcData.name,
-    cal:Math.round(modalCalcData.cal*f), prot:Math.round(modalCalcData.prot*f*10)/10,
-    sat:Math.round(modalCalcData.sat*f*10)/10, sugar:Math.round(modalCalcData.sugar*f*10)/10,
-    fiber:Math.round(modalCalcData.fiber*f*10)/10, qty:Math.round(qty), pts:pts
+    name:  modalCalcData.name,
+    cal:   Math.round(modalCalcData.cal*f),
+    prot:  Math.round(modalCalcData.prot*f*10)/10,
+    sat:   Math.round(modalCalcData.sat*f*10)/10,
+    sugar: Math.round(modalCalcData.sugar*f*10)/10,
+    fiber: Math.round(modalCalcData.fiber*f*10)/10,
+    qty:   Math.round(qty),
+    pts:   pts
   });
-  window.closeModal(); renderJournal(); updateHeader(); saveJournalDay(dateStr);
+  window.closeModal();
+  renderJournal();
+  updateHeader();
+  saveJournalDay(dateStr);
   toast('✅ Ajouté ! ('+pts+' pt'+(pts>1?'s':'')+')');
   window.showPage('journal');
 };
 
 // ══ BIBLIOTHÈQUE ══════════════════════════════
 function getEmoji(name) {
-  var MAP = {pain:'🍞',riz:'🍚','p\u00e2tes':'🍝',poulet:'🍗',poisson:'🐟',saumon:'🐟',
+  var MAP = {pain:'🍞',riz:'🍚',pates:'🍝',poulet:'🍗',poisson:'🐟',saumon:'🐟',
     thon:'🐟',salade:'🥗',pomme:'🍎',banane:'🍌',yaourt:'🥛',fromage:'🧀',
     oeuf:'🥚',chocolat:'🍫',eau:'💧',lait:'🥛',tomate:'🍅',carotte:'🥕',
     brocoli:'🥦',dinde:'🍗',boeuf:'🥩',veau:'🥩',agneau:'🥩',porc:'🥩',
@@ -411,35 +456,43 @@ function getEmoji(name) {
   for (var k=0; k<keys.length; k++) { if (lower.indexOf(keys[k])!==-1) return MAP[keys[k]]; }
   return '🍽️';
 }
+
 window.saveToLibrary = function() {
   var name = el('c-name').value.trim();
   if (!name) { toast("Donne un nom à l'aliment"); return; }
-  var item = { name:name, emoji:getEmoji(name),
-    cal:parseFloat(el('c-cal').value)||0, prot:parseFloat(el('c-prot').value)||0,
-    sat:parseFloat(el('c-sat').value)||0, sugar:parseFloat(el('c-sugar').value)||0,
-    fiber:parseFloat(el('c-fiber').value)||0, portion:parseFloat(el('c-portion').value)||100,
-    savedAt:Date.now() };
+  var item = {
+    name: name, emoji: getEmoji(name),
+    cal:     parseFloat(el('c-cal').value)||0,
+    prot:    parseFloat(el('c-prot').value)||0,
+    sat:     parseFloat(el('c-sat').value)||0,
+    sugar:   parseFloat(el('c-sugar').value)||0,
+    fiber:   parseFloat(el('c-fiber').value)||0,
+    portion: parseFloat(el('c-portion').value)||100,
+    savedAt: Date.now()
+  };
   item.pts = calcPts(item.cal,item.prot,item.sat,item.sugar,item.fiber);
-  if (isDemoMode || !fbDb) { item.id='demo_'+Date.now(); library.push(item); renderLibrary(); toast('💾 Sauvegardé !'); return; }
-  fbDb.collection('users/'+currentUser.uid+'/library').add(item).then(function(){ toast('💾 Sauvegardé !'); });
+  var db = window.FB_DB;
+  if (isDemoMode || !db) {
+    item.id='demo_'+Date.now(); library.push(item); renderLibrary(); toast('💾 Sauvegardé !'); return;
+  }
+  db.collection('users/'+currentUser.uid+'/library').add(item).then(function(){ toast('💾 Sauvegardé !'); });
 };
 
 function renderLibrary() {
   var search   = (el('lib-search') ? el('lib-search').value : '').toLowerCase();
   var filtered = library.filter(function(i){ return i.name.toLowerCase().indexOf(search)!==-1; });
-  var list = el('library-list'), empty = el('library-empty');
+  var list=el('library-list'), empty=el('library-empty');
   if (!filtered.length) {
     list.innerHTML='';
     empty.style.display='block';
-    // Message différent selon si on cherche ou si la biblio est vide
     empty.innerHTML = search
       ? '<div style="font-size:2rem">🔍</div><div style="font-size:.88rem;margin-top:8px">Aucun résultat pour "'+search+'"</div>'
       : '<div style="font-size:2rem">📭</div>'
-        + '<div style="font-size:.88rem;margin-top:8px;margin-bottom:16px">Ta bibliothèque est vide.<br>Ajoute des aliments depuis le calculateur<br>ou importe des favoris :</div>'
-        + '<button class="btn-primary" style="max-width:260px;margin:0 auto" onclick="importFavorites()">⭐ Importer des favoris</button>';
+        +'<div style="font-size:.88rem;margin-top:8px;margin-bottom:16px">Ta bibliothèque est vide.<br>Ajoute des aliments depuis le calculateur,<br>ou importe des favoris :</div>'
+        +'<button class="btn-primary" style="max-width:260px;margin:0 auto" onclick="importFavorites()">⭐ Importer 30 aliments courants</button>';
     return;
   }
-  empty.style.display = 'none';
+  empty.style.display='none';
   list.innerHTML = filtered.map(function(item) {
     return '<div class="lib-item" onclick="loadFromLibrary(\''+item.id+'\')"><div class="lib-item-emoji">'+(item.emoji||'🍽️')+'</div>'
       +'<div class="lib-item-info"><div class="lib-item-name">'+item.name+'</div>'
@@ -448,6 +501,7 @@ function renderLibrary() {
       +'<button class="lib-item-del" onclick="event.stopPropagation();deleteLibItem(\''+item.id+'\')">🗑</button></div>';
   }).join('');
 }
+
 window.loadFromLibrary = function(id) {
   var item = library.filter(function(i){ return i.id===id; })[0]; if (!item) return;
   el('c-name').value=item.name; el('c-cal').value=item.cal||0; el('c-prot').value=item.prot||0;
@@ -455,75 +509,73 @@ window.loadFromLibrary = function(id) {
   el('c-fiber').value=item.fiber||0; el('c-portion').value=item.portion||100;
   window.calcPoints(); window.showPage('calc'); toast('📋 '+item.name+' chargé');
 };
+
 window.deleteLibItem = function(id) {
-  if (isDemoMode || !fbDb) { library=library.filter(function(i){ return i.id!==id; }); renderLibrary(); toast('Supprimé'); return; }
-  fbDb.doc('users/'+currentUser.uid+'/library/'+id).delete().then(function(){ toast('Supprimé'); });
+  var db = window.FB_DB;
+  if (isDemoMode || !db) { library=library.filter(function(i){ return i.id!==id; }); renderLibrary(); toast('Supprimé'); return; }
+  db.doc('users/'+currentUser.uid+'/library/'+id).delete().then(function(){ toast('Supprimé'); });
 };
 
-// Importe une sélection de ~30 aliments courants depuis FOODS_DB
 window.importFavorites = function() {
-  if (typeof FOODS_DB === 'undefined') { toast('Base de données non chargée'); return; }
-  // Sélection équilibrée : protéines, féculents, légumes, fruits, laitiers
+  if (typeof FOODS_DB==='undefined') { toast('Base de données non chargée'); return; }
   var favNames = [
-    'Blanc de poulet (cuit, sans peau)', 'Saumon atlantique (filet, cuit)',
-    'Thon (en boîte, au naturel)', 'Œuf entier (cuit, dur)',
-    'Yaourt nature 0% (Danone/Activia)', 'Fromage blanc nature 0%',
-    'Skyr nature (Arla, Siggi\'s…)', 'Lait demi-écrémé (1,5%)',
-    'Riz blanc (cuit à l\'eau)', 'Pâtes blanches (cuites)',
-    'Flocons d\'avoine (secs)', 'Pomme de terre (bouillie, sans sel)',
-    'Lentilles vertes (cuites)', 'Pain complet (farine T150)',
-    'Quinoa (cuit)', 'Brocolis (cuits vapeur)',
-    'Carottes (crues)', 'Épinards (cuits)',
-    'Tomate (fraîche)', 'Courgette (cuite)',
-    'Avocat (Hass)', 'Pomme (Golden, Gala, Fuji…)',
-    'Banane', 'Orange (navel, sanguine)',
-    'Fraises', 'Amandes (naturelles)',
-    'Huile d\'olive (vierge extra)', 'Beurre (doux)',
-    'Escalope de dinde (cuite)', 'Bœuf haché 5% MG (cuit)'
+    'Blanc de poulet (cuit, sans peau)','Saumon atlantique (filet, cuit)',
+    'Thon (en boîte, au naturel)','Œuf entier (cuit, dur)',
+    'Yaourt nature 0% (Danone/Activia)','Fromage blanc nature 0%',
+    'Skyr nature (Arla, Siggi\'s…)','Lait demi-écrémé (1,5%)',
+    'Riz blanc (cuit à l\'eau)','Pâtes blanches (cuites)',
+    'Flocons d\'avoine (secs)','Pomme de terre (bouillie, sans sel)',
+    'Lentilles vertes (cuites)','Pain complet (farine T150)',
+    'Quinoa (cuit)','Brocolis (cuits vapeur)',
+    'Carottes (crues)','Épinards (cuits)',
+    'Tomate (fraîche)','Courgette (cuite)',
+    'Avocat (Hass)','Pomme (Golden, Gala, Fuji…)',
+    'Banane','Orange (navel, sanguine)',
+    'Fraises','Amandes (naturelles)',
+    'Huile d\'olive (vierge extra)','Beurre (doux)',
+    'Escalope de dinde (cuite)','Bœuf haché 5% MG (cuit)'
   ];
-  var toAdd = FOODS_DB.filter(function(f) { return favNames.indexOf(f.name) !== -1; });
+  var toAdd = FOODS_DB.filter(function(f){ return favNames.indexOf(f.name)!==-1; });
   if (!toAdd.length) { toast('Aucun aliment trouvé'); return; }
-
-  var added = 0;
+  var db = window.FB_DB;
+  var count = 0;
   toAdd.forEach(function(f) {
     var item = { name:f.name, emoji:f.emoji, cal:f.cal, prot:f.prot,
       sat:f.sat, sugar:f.sugar, fiber:f.fiber, portion:f.portion,
       pts:calcPts(f.cal,f.prot,f.sat,f.sugar,f.fiber), savedAt:Date.now() };
-    if (isDemoMode || !fbDb) {
-      item.id = 'fav_'+added; library.push(item); added++;
-    } else {
-      fbDb.collection('users/'+currentUser.uid+'/library').add(item);
-      added++;
-    }
+    if (isDemoMode || !db) { item.id='fav_'+(count++); library.push(item); }
+    else { db.collection('users/'+currentUser.uid+'/library').add(item); count++; }
   });
-  if (isDemoMode || !fbDb) renderLibrary();
-  toast('⭐ '+added+' aliments importés !');
+  if (isDemoMode || !db) renderLibrary();
+  toast('⭐ '+count+' aliments importés !');
 };
 
 // ══ POIDS ════════════════════════════════════
 window.addWeight = function() {
   var val = parseFloat(el('weight-input').value);
-  if (!val || val<30 || val>300) { toast('Poids invalide'); return; }
-  if (isDemoMode || !fbDb) {
+  if (!val||val<30||val>300) { toast('Poids invalide'); return; }
+  var db = window.FB_DB;
+  if (isDemoMode || !db) {
     weights.push({id:'dw_'+Date.now(), date:todayStr(0), value:val, ts:Date.now()});
-    renderWeights(); el('weight-input').value=''; toast('⚖️ '+val+' kg'); return;
+    renderWeights(); el('weight-input').value=''; toast('⚖️ '+val+' kg enregistré'); return;
   }
-  fbDb.collection('users/'+currentUser.uid+'/weights').add({date:todayStr(0),value:val,ts:Date.now()}).then(function(){
-    el('weight-input').value=''; toast('⚖️ '+val+' kg');
+  db.collection('users/'+currentUser.uid+'/weights').add({date:todayStr(0),value:val,ts:Date.now()}).then(function(){
+    el('weight-input').value=''; toast('⚖️ '+val+' kg enregistré');
   });
 };
+
 function renderWeights() {
   var hist=el('weight-history'), empty=el('weight-empty'), statsCard=el('weight-stats-card');
   if (!weights.length) { hist.innerHTML=''; empty.style.display='block'; statsCard.style.display='none'; return; }
   empty.style.display='none'; statsCard.style.display='block';
-  var sorted = weights.slice().sort(function(a,b){ return b.ts-a.ts; });
-  var diff = sorted[0].value - weights[0].value;
+  var sorted=weights.slice().sort(function(a,b){ return b.ts-a.ts; });
+  var diff=sorted[0].value-weights[0].value;
   el('ws-start').textContent   = weights[0].value+' kg';
   el('ws-current').textContent = sorted[0].value+' kg';
-  var diffEl = el('ws-diff');
+  var diffEl=el('ws-diff');
   diffEl.textContent = (diff>=0?'+':'')+diff.toFixed(1)+' kg';
   diffEl.style.color = diff<=0?'var(--green)':'#FF3B30';
-  hist.innerHTML = sorted.slice(0,10).map(function(w,idx) {
+  hist.innerHTML = sorted.slice(0,10).map(function(w,idx){
     var prev=sorted[idx+1], d=prev?w.value-prev.value:0;
     return '<div class="weight-entry">'
       +'<div><div class="weight-val">'+w.value+' kg</div><div class="weight-date">'+formatDate(w.date)+'</div></div>'
@@ -534,11 +586,11 @@ function renderWeights() {
 }
 function drawWeightChart() {
   if (weights.length<2) return;
-  var sorted = weights.slice().sort(function(a,b){ return a.ts-b.ts; }).slice(-15);
-  var vals = sorted.map(function(w){ return w.value; });
-  var min=Math.min.apply(null,vals)-1, max=Math.max.apply(null,vals)+1;
-  var pts = sorted.map(function(w,i) {
-    var x=(i/(sorted.length-1))*300, y=88-((w.value-min)/(max-min))*88;
+  var sorted=weights.slice().sort(function(a,b){ return a.ts-b.ts; }).slice(-15);
+  var vals=sorted.map(function(w){ return w.value; });
+  var mn=Math.min.apply(null,vals)-1, mx=Math.max.apply(null,vals)+1;
+  var pts=sorted.map(function(w,i){
+    var x=(i/(sorted.length-1))*300, y=88-((w.value-mn)/(mx-mn))*88;
     return x+','+y;
   });
   el('weight-svg').innerHTML =
@@ -553,7 +605,7 @@ function loadProfileUI() {
   el('p-age').value      = profile.age      || '';
   el('p-sex').value      = profile.sex      || 'f';
   el('p-activity').value = profile.activity || '1';
-  updateBudgetPreview();
+  window.updateBudgetPreview();
 }
 window.updateBudgetPreview = function() {
   var w=parseFloat(el('p-weight').value)||70, age=parseInt(el('p-age').value)||30;
@@ -578,22 +630,19 @@ window.showPage = function(page) {
 };
 
 // ══ INIT ══════════════════════════════════════
-(function init() {
-  // Firebase est déjà initialisé dans le HTML — on récupère les références
-  fbAuth = window.FB_AUTH;
-  fbDb   = window.FB_DB;
-
-  if (fbAuth) {
-    fbAuth.onAuthStateChanged(function(user) {
-      if (user) {
-        currentUser = user;
-        showAppScreen();
-        setupHeader();
-        subscribeData();
-      } else if (!isDemoMode) {
-        showAuthScreen();
-      }
-    });
-  }
-  // Sans Firebase : le timer HTML (1.5s) a déjà affiché l'auth
-})();
+// onAuthStateChanged — écoute les changements d'état Firebase
+var auth = window.FB_AUTH;
+if (auth) {
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      currentUser = user;
+      showAppScreen();
+      setupHeader();
+      subscribeData();
+    } else if (!isDemoMode) {
+      showAuthScreen();
+    }
+  });
+}
+// Note : le timer HTML (1.5s) dans index.html gère l'affichage du splash
+// indépendamment de Firebase, donc l'auth screen apparaît toujours.
