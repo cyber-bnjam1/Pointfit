@@ -34,6 +34,8 @@ html, body {
   font-family: 'Nunito', sans-serif;
   color: var(--text);
   overflow: hidden;
+  /* bloque tout scroll horizontal */
+  max-width: 100vw;
 }
 
 /* ════════════════════════════════════════
@@ -110,10 +112,11 @@ html, body {
   border-radius: var(--radius-sm);
   padding: 12px 16px;
   font-family: 'Nunito', sans-serif;
-  font-size: 1rem;
+  font-size: 16px;
   width: 100%;
   outline: none;
   transition: border-color .2s;
+  box-sizing: border-box;
 }
 .auth-input:focus { border-color: var(--orange); }
 .auth-switch { text-align: center; font-size: 0.9rem; color: var(--text2); cursor: pointer; }
@@ -292,16 +295,16 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 6px 0;
   color: var(--text2);
   transition: color .2s;
 }
 .nav-btn.active { color: var(--orange); }
-.nav-icon  { font-size: 1.3rem; }
+.nav-icon  { width: 22px; height: 22px; flex-shrink: 0; }
 .nav-label { font-size: 0.62rem; font-weight: 700; }
 
 /* ════════════════════════════════════════
@@ -312,15 +315,28 @@ html, body {
   position: absolute;
   inset: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   display: none;
   flex-direction: column;
   gap: 14px;
+  /* évite que le contenu dépasse sur iOS */
+  box-sizing: border-box;
+  width: 100%;
 }
 .page.active { display: flex; }
 .page::-webkit-scrollbar { display: none; }
 
-.card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  /* empêche les enfants de déborder */
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
 .card-title {
   font-family: 'Syne', sans-serif;
   font-size: 1rem;
@@ -338,19 +354,30 @@ html, body {
 /* ════════════════════════════════════════
    PAGE — CALCULATEUR
    ════════════════════════════════════════ */
-.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.calc-field { display: flex; flex-direction: column; gap: 5px; }
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  /* Empêche le débordement horizontal */
+  box-sizing: border-box;
+}
+.calc-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .calc-label { font-size: 0.75rem; font-weight: 700; color: var(--text2); }
 .calc-input {
   border: 2px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   font-family: 'Nunito', sans-serif;
-  font-size: 1rem;
+  /* 16px minimum pour éviter le zoom automatique sur iOS */
+  font-size: 16px;
   font-weight: 700;
   outline: none;
   transition: border-color .2s;
   background: var(--bg);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .calc-input:focus { border-color: var(--orange); background: white; }
 .calc-result {
@@ -373,11 +400,12 @@ html, body {
   border-radius: 12px;
   padding: 10px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
+  font-size: 16px;
   width: 100%;
   outline: none;
   transition: border-color .2s;
   background: white;
+  box-sizing: border-box;
 }
 .foods-db-search:focus { border-color: var(--orange); }
 .foods-db-results { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-top: 8px; }
@@ -442,11 +470,12 @@ html, body {
   border-radius: 12px;
   padding: 10px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
+  font-size: 16px;
   width: 100%;
   outline: none;
   transition: border-color .2s;
   background: white;
+  box-sizing: border-box;
 }
 .lib-search:focus { border-color: var(--orange); }
 .lib-item {
@@ -477,9 +506,11 @@ html, body {
   border-radius: 12px;
   padding: 12px 16px;
   font-family: 'Nunito', sans-serif;
-  font-size: 1.1rem;
+  font-size: 16px;
   font-weight: 700;
   outline: none;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .weight-input:focus { border-color: var(--orange); }
 .weight-entry  { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg); border-radius: 12px; margin-bottom: 6px; }
@@ -510,10 +541,12 @@ html, body {
   border-radius: 12px;
   padding: 11px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
+  font-size: 16px;
   outline: none;
   transition: border-color .2s;
   background: white;
+  width: 100%;
+  box-sizing: border-box;
 }
 .profile-input:focus,
 .profile-select:focus { border-color: var(--orange); }
