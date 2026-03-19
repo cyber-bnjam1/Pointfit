@@ -26,9 +26,33 @@ messagingSenderId: “VOTRE_SENDER_ID”,
 appId:             “VOTRE_APP_ID”
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const auth  = getAuth(fbApp);
-const db    = getFirestore(fbApp);
+// Détecte si la config Firebase est factice (mode démo forcé)
+const FIREBASE_CONFIGURED = firebaseConfig.apiKey !== “VOTRE_API_KEY”;
+
+let fbApp = null, auth = null, db = null;
+
+function hideSplash() {
+document.getElementById(‘splash’).classList.add(‘hide’);
+}
+
+function showAuth() {
+hideSplash();
+document.getElementById(‘auth-screen’).classList.remove(‘hidden’);
+}
+
+if (FIREBASE_CONFIGURED) {
+try {
+fbApp = initializeApp(firebaseConfig);
+auth  = getAuth(fbApp);
+db    = getFirestore(fbApp);
+} catch (e) {
+console.warn(‘Firebase init failed:’, e);
+showAuth();
+}
+} else {
+// Config factice → on saute directement l’écran auth après un court splash
+setTimeout(showAuth, 800);
+}
 
 // ════════════════════════════════════════
 //  STATE
@@ -231,8 +255,13 @@ if (unsubLibrary)  unsubLibrary();
 await fbSignOut(auth);
 };
 
+if (FIREBASE_CONFIGURED && auth) {
+// Timeout de secours : si Firebase ne répond pas en 5s, on affiche l’auth
+const splashTimeout = setTimeout(showAuth, 5000);
+
 onAuthStateChanged(auth, async user => {
-document.getElementById(‘splash’).classList.add(‘hide’);
+clearTimeout(splashTimeout);
+hideSplash();
 if (user) {
 currentUser = user;
 document.getElementById(‘auth-screen’).classList.add(‘hidden’);
@@ -245,6 +274,7 @@ document.getElementById(‘auth-screen’).classList.remove(‘hidden’);
 document.getElementById(‘app’).classList.remove(‘visible’);
 }
 });
+}
 
 // ════════════════════════════════════════
 //  FIRESTORE — ABONNEMENTS TEMPS RÉEL
@@ -282,8 +312,8 @@ renderWeights();
 
 // ── Chargement d’un jour du journal ──
 async function loadJournalDay(dateStr) {
-if (journal[dateStr] !== undefined) return; // déjà en cache
-if (isDemoMode) {
+if (journal[dateStr] !== undefined) return;
+if (isDemoMode || !db) {
 journal[dateStr] = { meals: {} };
 renderJournal();
 updateHeader();
@@ -297,12 +327,12 @@ updateHeader();
 }
 
 async function saveJournalDay(dateStr) {
-if (isDemoMode) return;
+if (isDemoMode || !db) return;
 await setDoc(doc(db, ‘users’, currentUser.uid, ‘journal’, dateStr), journal[dateStr]);
 }
 
 async function saveProfileDb() {
-if (isDemoMode) return;
+if (isDemoMode || !db) return;
 await setDoc(doc(db, ‘users’, currentUser.uid, ‘data’, ‘profile’), profile);
 }
 
