@@ -46,7 +46,7 @@
     <div class="auth-title" id="auth-title">Connexion</div>
     <div class="auth-error" id="auth-error"></div>
 
-
+```
 <input class="auth-input" type="email"    id="auth-email"    placeholder="Email">
 <input class="auth-input" type="password" id="auth-password" placeholder="Mot de passe">
 <input class="auth-input" type="text"     id="auth-name"     placeholder="Prénom" style="display:none">
@@ -59,7 +59,7 @@
 <div class="auth-switch" id="auth-switch">
   Pas de compte ? <span>S'inscrire</span>
 </div>
-
+```
 
   </div>
 </div>
@@ -87,7 +87,7 @@
       <button class="btn-icon" onclick="showPage('profil')">👤</button>
     </div>
 
-
+```
 <!-- Anneau de points restants -->
 <div class="points-ring-wrap">
   <div class="ring-container">
@@ -118,7 +118,7 @@
     <div class="mini-stat-lbl">Bonus semaine</div>
   </div>
 </div>
-
+```
 
   </header>
 
@@ -126,7 +126,7 @@
 
   <div class="pages">
 
-
+```
 <!-- ── PAGE : JOURNAL ── -->
 <div class="page active" id="page-journal">
   <div class="card">
@@ -331,7 +331,7 @@
     <button class="btn-danger" onclick="signOut()">Se déconnecter</button>
   </div>
 </div>
-
+```
 
   </div><!-- /pages -->
 
@@ -380,7 +380,7 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
 
-
+```
 <p style="margin-bottom:10px;font-size:0.85rem;color:var(--text2);font-weight:600">Repas :</p>
 <div class="meal-chips">
   <button class="meal-chip selected" onclick="selectMeal('petit-dejeuner',this)">🌅 Petit-déj.</button>
@@ -401,7 +401,7 @@
 </div>
 
 <button class="btn-primary" onclick="confirmAddToJournal()">✅ Ajouter</button>
-
+```
 
   </div>
 </div>
@@ -418,7 +418,15 @@
 
 <script src="foods.js"></script>
 
-<!-- Filet de sécurité : cache le splash dans tous les cas après 1.5s -->
+<!-- Firebase compat (SDK classique, pas ESM) -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- Filet de sécurité : cache le splash dans tous les cas après 2s -->
 
 <script>
   setTimeout(function() {
@@ -429,10 +437,12 @@
       splash.classList.add('hide');
       if (auth) auth.classList.remove('hidden');
     }
-  }, 1500);
+  }, 2000);
 </script>
 
-<script type="module" src="app.js"></script>
+<!-- App (script classique, PAS type=module) -->
+
+<script src="app.js"></script>
 
 </body>
 </html>
