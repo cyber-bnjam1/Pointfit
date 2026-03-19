@@ -528,11 +528,6 @@ if (page===‘biblio’)  renderLibrary();
 
 // ══ INIT ══════════════════════════════════════
 (function init() {
-// Bindings
-el(‘demo-btn’).addEventListener(‘click’, launchDemo);
-el(‘auth-btn’).addEventListener(‘click’, doAuth);
-el(‘auth-switch’).addEventListener(‘click’, toggleAuthMode);
-
 // Firebase
 if (FIREBASE_OK) {
 try {
@@ -545,5 +540,5 @@ else if (!isDemoMode) { showAuthScreen(); }
 });
 } catch(e) { console.warn(‘Firebase:’, e); showAuthScreen(); }
 }
-// Pas de Firebase configuré : le timer HTML (1.5s) affiche l’auth
+// Sans Firebase : le timer HTML (1.5s) a déjà affiché l’auth
 })();
