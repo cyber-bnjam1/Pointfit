@@ -427,7 +427,17 @@ function renderLibrary() {
   var search   = (el('lib-search') ? el('lib-search').value : '').toLowerCase();
   var filtered = library.filter(function(i){ return i.name.toLowerCase().indexOf(search)!==-1; });
   var list = el('library-list'), empty = el('library-empty');
-  if (!filtered.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  if (!filtered.length) {
+    list.innerHTML='';
+    empty.style.display='block';
+    // Message différent selon si on cherche ou si la biblio est vide
+    empty.innerHTML = search
+      ? '<div style="font-size:2rem">🔍</div><div style="font-size:.88rem;margin-top:8px">Aucun résultat pour "'+search+'"</div>'
+      : '<div style="font-size:2rem">📭</div>'
+        + '<div style="font-size:.88rem;margin-top:8px;margin-bottom:16px">Ta bibliothèque est vide.<br>Ajoute des aliments depuis le calculateur<br>ou importe des favoris :</div>'
+        + '<button class="btn-primary" style="max-width:260px;margin:0 auto" onclick="importFavorites()">⭐ Importer des favoris</button>';
+    return;
+  }
   empty.style.display = 'none';
   list.innerHTML = filtered.map(function(item) {
     return '<div class="lib-item" onclick="loadFromLibrary(\''+item.id+'\')"><div class="lib-item-emoji">'+(item.emoji||'🍽️')+'</div>'
@@ -447,6 +457,46 @@ window.loadFromLibrary = function(id) {
 window.deleteLibItem = function(id) {
   if (isDemoMode || !fbDb) { library=library.filter(function(i){ return i.id!==id; }); renderLibrary(); toast('Supprimé'); return; }
   fbDb.doc('users/'+currentUser.uid+'/library/'+id).delete().then(function(){ toast('Supprimé'); });
+};
+
+// Importe une sélection de ~30 aliments courants depuis FOODS_DB
+window.importFavorites = function() {
+  if (typeof FOODS_DB === 'undefined') { toast('Base de données non chargée'); return; }
+  // Sélection équilibrée : protéines, féculents, légumes, fruits, laitiers
+  var favNames = [
+    'Blanc de poulet (cuit, sans peau)', 'Saumon atlantique (filet, cuit)',
+    'Thon (en boîte, au naturel)', 'Œuf entier (cuit, dur)',
+    'Yaourt nature 0% (Danone/Activia)', 'Fromage blanc nature 0%',
+    'Skyr nature (Arla, Siggi\'s…)', 'Lait demi-écrémé (1,5%)',
+    'Riz blanc (cuit à l\'eau)', 'Pâtes blanches (cuites)',
+    'Flocons d\'avoine (secs)', 'Pomme de terre (bouillie, sans sel)',
+    'Lentilles vertes (cuites)', 'Pain complet (farine T150)',
+    'Quinoa (cuit)', 'Brocolis (cuits vapeur)',
+    'Carottes (crues)', 'Épinards (cuits)',
+    'Tomate (fraîche)', 'Courgette (cuite)',
+    'Avocat (Hass)', 'Pomme (Golden, Gala, Fuji…)',
+    'Banane', 'Orange (navel, sanguine)',
+    'Fraises', 'Amandes (naturelles)',
+    'Huile d\'olive (vierge extra)', 'Beurre (doux)',
+    'Escalope de dinde (cuite)', 'Bœuf haché 5% MG (cuit)'
+  ];
+  var toAdd = FOODS_DB.filter(function(f) { return favNames.indexOf(f.name) !== -1; });
+  if (!toAdd.length) { toast('Aucun aliment trouvé'); return; }
+
+  var added = 0;
+  toAdd.forEach(function(f) {
+    var item = { name:f.name, emoji:f.emoji, cal:f.cal, prot:f.prot,
+      sat:f.sat, sugar:f.sugar, fiber:f.fiber, portion:f.portion,
+      pts:calcPts(f.cal,f.prot,f.sat,f.sugar,f.fiber), savedAt:Date.now() };
+    if (isDemoMode || !fbDb) {
+      item.id = 'fav_'+added; library.push(item); added++;
+    } else {
+      fbDb.collection('users/'+currentUser.uid+'/library').add(item);
+      added++;
+    }
+  });
+  if (isDemoMode || !fbDb) renderLibrary();
+  toast('⭐ '+added+' aliments importés !');
 };
 
 // ══ POIDS ════════════════════════════════════
@@ -528,17 +578,17 @@ window.showPage = function(page) {
 
 // ══ INIT ══════════════════════════════════════
 (function init() {
-  // Firebase
+  // Firebase — guard contre double init
   if (FIREBASE_OK) {
     try {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      fbAuth = firebase.auth();
-      fbDb   = firebase.firestore();
+      var existingApps = firebase.apps;
+      var fbAppInst = existingApps.length ? existingApps[0] : firebase.initializeApp(FIREBASE_CONFIG);
+      fbAuth = firebase.auth(fbAppInst);
+      fbDb   = firebase.firestore(fbAppInst);
       fbAuth.onAuthStateChanged(function(user) {
         if (user) { currentUser=user; showAppScreen(); setupHeader(); subscribeData(); }
         else if (!isDemoMode) { showAuthScreen(); }
       });
     } catch(e) { console.warn('Firebase:', e); showAuthScreen(); }
   }
-  // Sans Firebase : le timer HTML (1.5s) a déjà affiché l'auth
 })();
