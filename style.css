@@ -51,7 +51,7 @@ html, body {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   z-index:999; gap:10px; transition:opacity .4s;
 }
-#splash.hide { opacity:0; pointer-events:none; }
+#splash.hide { opacity:0; pointer-events:none; display:none; }
 .splash-logo { font-size:2.8rem; font-weight:800; color:white; letter-spacing:-1px; animation:popIn .55s ease both; }
 .splash-sub  { color:rgba(255,255,255,.82); font-size:.93rem; font-weight:500; animation:fadeIn .5s .2s both; }
 .splash-spin { width:30px;height:30px; border:3px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin .8s linear infinite; margin-top:22px; }
