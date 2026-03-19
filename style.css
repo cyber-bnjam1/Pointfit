@@ -67,6 +67,17 @@ html, body {
 .auth-divider { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: .78rem; }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: white; color: #3c4043;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 13px 16px; font-family: var(--font); font-size: .95rem; font-weight: 600;
+  cursor: pointer; width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  transition: box-shadow .2s, transform .14s;
+}
+.btn-google:active { transform: scale(.97); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
 /* ══ BOUTONS ═════════════════════════════════ */
 .btn-primary {
   background: linear-gradient(135deg, var(--orange), var(--coral));
