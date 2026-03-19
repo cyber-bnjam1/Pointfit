@@ -528,13 +528,8 @@ if (page===‘biblio’)  renderLibrary();
 
 // ══ INIT ══════════════════════════════════════
 (function init() {
-// Filet de sécurité : affiche l’auth après 2s dans tous les cas
-var safetyTimer = setTimeout(function() {
-if (!currentUser && !isDemoMode) showAuthScreen();
-}, 2000);
-
 // Bindings
-el(‘demo-btn’).addEventListener(‘click’, function() { clearTimeout(safetyTimer); launchDemo(); });
+el(‘demo-btn’).addEventListener(‘click’, launchDemo);
 el(‘auth-btn’).addEventListener(‘click’, doAuth);
 el(‘auth-switch’).addEventListener(‘click’, toggleAuthMode);
 
@@ -544,13 +539,11 @@ try {
 firebase.initializeApp(FIREBASE_CONFIG);
 fbAuth = firebase.auth();
 fbDb   = firebase.firestore();
-var fbTimer = setTimeout(showAuthScreen, 5000);
 fbAuth.onAuthStateChanged(function(user) {
-clearTimeout(fbTimer); clearTimeout(safetyTimer);
 if (user) { currentUser=user; showAppScreen(); setupHeader(); subscribeData(); }
 else if (!isDemoMode) { showAuthScreen(); }
 });
-} catch(e) { console.warn(‘Firebase:’, e); clearTimeout(safetyTimer); showAuthScreen(); }
+} catch(e) { console.warn(‘Firebase:’, e); showAuthScreen(); }
 }
-// Si pas Firebase : safetyTimer s’en charge
+// Pas de Firebase configuré : le timer HTML (1.5s) affiche l’auth
 })();
