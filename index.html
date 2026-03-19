@@ -418,6 +418,19 @@
 
 <script src="foods.js"></script>
 
+<!-- Filet de sécurité : cache le splash dans tous les cas après 1.5s -->
+
+<script>
+  setTimeout(function() {
+    var splash = document.getElementById('splash');
+    var auth   = document.getElementById('auth-screen');
+    if (splash && !splash.classList.contains('hide')) {
+      splash.classList.add('hide');
+      if (auth) auth.classList.remove('hidden');
+    }
+  }, 1500);
+</script>
+
 <script type="module" src="app.js"></script>
 
 </body>
