@@ -20,7 +20,6 @@ var unsubProfile  = null;
 var unsubLibrary  = null;
 var unsubWeights  = null;
 var modalCalcData = {};
-var authMode      = 'login';
 
 // ══ UTILS ════════════════════════════════════
 function todayStr(offset) {
@@ -122,60 +121,33 @@ function launchDemo() {
 }
 window.launchDemo = launchDemo;
 
-// ══ AUTH ══════════════════════════════════════
-function toggleAuthMode() {
-  authMode = authMode==='login' ? 'register' : 'login';
-  el('auth-title').textContent  = authMode==='login' ? 'Connexion' : 'Inscription';
-  el('auth-btn').textContent    = authMode==='login' ? 'Se connecter' : 'Créer mon compte';
-  el('auth-switch').innerHTML   = authMode==='login'
-    ? "Pas de compte ? <span>S'inscrire</span>"
-    : "Déjà un compte ? <span>Se connecter</span>";
-  el('auth-name').style.display = authMode==='register' ? 'block' : 'none';
-  el('auth-error').classList.remove('show');
-}
-window.toggleAuthMode = toggleAuthMode;
-
-function doAuth() {
-  // Utilise window.FB_AUTH directement — toujours à jour
+// ══ AUTH — GOOGLE UNIQUEMENT ══════════════════
+function signInWithGoogle() {
   var auth = window.FB_AUTH;
   if (!auth) {
-    el('auth-error').textContent = 'Service non disponible, réessaie dans quelques secondes.';
-    el('auth-error').classList.add('show');
+    showError('Service non disponible, réessaie dans quelques secondes.');
     return;
   }
-  var email = el('auth-email').value.trim();
-  var pwd   = el('auth-password').value;
-  var name  = el('auth-name').value.trim();
-  var errEl = el('auth-error');
-  errEl.classList.remove('show');
-  if (!email || !pwd) {
-    errEl.textContent = 'Remplis ton email et ton mot de passe.';
-    errEl.classList.add('show');
-    return;
-  }
-  var promise = authMode === 'register'
-    ? auth.createUserWithEmailAndPassword(email, pwd)
-    : auth.signInWithEmailAndPassword(email, pwd);
-  promise.then(function(cred) {
-    if (authMode === 'register' && name) {
-      return cred.user.updateProfile({ displayName: name });
+  var provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  auth.signInWithPopup(provider).catch(function(e) {
+    if (e.code === 'auth/popup-closed-by-user') return; // ignoré
+    if (e.code === 'auth/popup-blocked') {
+      // Fallback redirect si popup bloquée (Safari iOS)
+      auth.signInWithRedirect(provider);
+      return;
     }
-  }).catch(function(e) {
-    var msgs = {
-      'auth/email-already-in-use': 'Email déjà utilisé.',
-      'auth/invalid-email':        'Adresse email invalide.',
-      'auth/weak-password':        'Mot de passe trop court (6 caractères min).',
-      'auth/wrong-password':       'Mot de passe incorrect.',
-      'auth/user-not-found':       'Aucun compte avec cet email.',
-      'auth/invalid-credential':   'Email ou mot de passe incorrect.',
-      'auth/too-many-requests':    'Trop de tentatives, réessaie plus tard.',
-      'auth/network-request-failed': 'Erreur réseau, vérifie ta connexion.',
-    };
-    errEl.textContent = msgs[e.code] || ('Erreur : ' + e.message);
-    errEl.classList.add('show');
+    showError('Erreur : ' + (e.message || e.code));
   });
 }
-window.doAuth = doAuth;
+window.signInWithGoogle = signInWithGoogle;
+
+function showError(msg) {
+  var errEl = el('auth-error');
+  if (!errEl) return;
+  errEl.textContent = msg;
+  errEl.classList.add('show');
+}
 
 window.signOut = function() {
   if (isDemoMode) {
