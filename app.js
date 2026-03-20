@@ -708,7 +708,7 @@ renderLibrary();
 };
 
 // ══ INIT ══════════════════════════════════════
-// onAuthStateChanged — écoute les changements d’état Firebase
+window.addEventListener(‘load’, function() {
 var auth = window.FB_AUTH;
 if (auth) {
 auth.onAuthStateChanged(function(user) {
@@ -721,6 +721,18 @@ subscribeData();
 showAuthScreen();
 }
 });
+// Gère le résultat du signInWithRedirect (fallback Safari)
+auth.getRedirectResult().then(function(result) {
+if (result && result.user) {
+currentUser = result.user;
+showAppScreen();
+setupHeader();
+subscribeData();
 }
-// Note : le timer HTML (1.5s) dans index.html gère l’affichage du splash
-// indépendamment de Firebase, donc l’auth screen apparaît toujours.
+}).catch(function(e) {
+if (e.code !== ‘auth/no-auth-event’) {
+showError(’Erreur connexion : ’ + e.message);
+}
+});
+}
+});
