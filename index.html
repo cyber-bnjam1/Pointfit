@@ -18,7 +18,7 @@
 
 <div id="splash">
   <div class="splash-logo">PointFit 🎯</div>
-  <div class="splash-sub">Ton coach nutrition personnel v1</div>
+  <div class="splash-sub">Ton coach nutrition personnel</div>
   <div class="splash-spin"></div>
 </div>
 
@@ -318,7 +318,7 @@
   }, 1500);
 </script>
 
-<!-- Firebase compat SDK v9 (dernière version compat disponible) -->
+<!-- Firebase compat SDK -->
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 
@@ -326,13 +326,12 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- Initialisation Firebase IMMÉDIATE — avant app.js -->
-
 <script>
+  // Init Firebase + onAuthStateChanged ICI — tout dans le même bloc synchrone
   window.FB_AUTH = null;
   window.FB_DB   = null;
   try {
-    var _app = firebase.initializeApp({
+    var _fbApp = firebase.initializeApp({
       apiKey:            "AIzaSyCFx3-cERR6ULys4uv1y86UeJQvCfp3_60",
       authDomain:        "pointfit0101.firebaseapp.com",
       projectId:         "pointfit0101",
@@ -340,9 +339,28 @@
       messagingSenderId: "668989116691",
       appId:             "1:668989116691:web:22481a36e8fa5a7289cae6"
     });
-    window.FB_AUTH = firebase.auth(_app);
-    window.FB_DB   = firebase.firestore(_app);
-    console.log('Firebase OK');
+    window.FB_AUTH = firebase.auth(_fbApp);
+    window.FB_DB   = firebase.firestore(_fbApp);
+
+    // onAuthStateChanged bindé ICI — Firebase est garanti prêt
+    window.FB_AUTH.onAuthStateChanged(function(user) {
+      if (user) {
+        // Appelle la fonction de app.js quand elle est disponible
+        if (typeof onFirebaseUser === 'function') {
+          onFirebaseUser(user);
+        } else {
+          // app.js pas encore chargé : on stocke et on attend
+          window._pendingUser = user;
+        }
+      } else {
+        window._pendingUser = null;
+        if (typeof showAuthScreen === 'function') showAuthScreen();
+      }
+    });
+
+    // Résultat redirect (fallback Safari)
+    window.FB_AUTH.getRedirectResult().catch(function(){});
+
   } catch(e) {
     console.warn('Firebase init error:', e);
   }
