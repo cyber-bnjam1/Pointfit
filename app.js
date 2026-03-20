@@ -708,31 +708,18 @@ renderLibrary();
 };
 
 // ══ INIT ══════════════════════════════════════
-window.addEventListener(‘load’, function() {
-var auth = window.FB_AUTH;
-if (auth) {
-auth.onAuthStateChanged(function(user) {
-if (user) {
+// Appelé par le onAuthStateChanged bindé dans index.html
+function onFirebaseUser(user) {
+if (isDemoMode) return;
 currentUser = user;
 showAppScreen();
 setupHeader();
 subscribeData();
-} else if (!isDemoMode) {
-showAuthScreen();
 }
-});
-// Gère le résultat du signInWithRedirect (fallback Safari)
-auth.getRedirectResult().then(function(result) {
-if (result && result.user) {
-currentUser = result.user;
-showAppScreen();
-setupHeader();
-subscribeData();
+window.onFirebaseUser = onFirebaseUser;
+
+// Si Firebase a déjà résolu l’utilisateur avant que app.js soit chargé
+if (window._pendingUser) {
+onFirebaseUser(window._pendingUser);
+window._pendingUser = null;
 }
-}).catch(function(e) {
-if (e.code !== ‘auth/no-auth-event’) {
-showError(’Erreur connexion : ’ + e.message);
-}
-});
-}
-});
